@@ -89,6 +89,13 @@
   #liveCode .lc{display:block; white-space:pre; padding:0 6px; border-radius:4px; transition:background .12s}
   #liveCode .lc.hl{background:#0e3346; color:#dff3ff; box-shadow:inset 3px 0 0 var(--accent2)}
   #liveCode .lc.hl .codeln{color:#7fd7e8}
+  #liveCode{font-size:13.5px}
+  .snipLabel{font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin:6px 0 4px; font-weight:600}
+  pre.code.snippet{font-size:17px; line-height:1.55; max-height:420px; overflow:auto}
+  pre.code.snippet .lc{display:block; white-space:pre; padding:0 8px; border-radius:5px; background:#0e3346; color:#dff3ff; box-shadow:inset 4px 0 0 var(--accent2)}
+  pre.code.snippet .lc .codeln{color:#7fd7e8}
+  .fulldetails summary{cursor:pointer; color:var(--accent2); font-size:12.5px; margin:10px 0 4px; user-select:none}
+  .fulldetails[open] summary{margin-bottom:8px}
   .note{background:#0f2b2a; border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:7px 10px; margin:6px 0 10px;
         font-size:12.6px; color:#c8d8d4; line-height:1.55}
   .note b{color:var(--accent)}
@@ -165,8 +172,13 @@
         <div id="log"></div>
       </div>
       <div class="tpanel" id="t-live">
-        <div id="liveReason" class="chip" style="margin-bottom:8px; width:100%"></div>
-        <pre class="code" id="liveCode"></pre>
+        <div id="liveReason" class="chip" style="margin-bottom:6px; width:100%"></div>
+        <div class="snipLabel">Now executing</div>
+        <pre class="code snippet" id="liveSnippet"></pre>
+        <details class="fulldetails">
+          <summary>Full controller.py</summary>
+          <pre class="code" id="liveCode"></pre>
+        </details>
       </div>
       <div class="tpanel" id="t-code"></div>
       <div class="tpanel" id="t-guide"><pre class="guide" id="guideText"></pre></div>
@@ -974,13 +986,23 @@ function setLive(a,label){
   if(label!==undefined) document.getElementById("liveReason").textContent="⚡ "+label;
   const lines=Array.from(document.querySelectorAll("#liveCode .lc"));
   lines.forEach(el=>el.classList.remove("hl"));
-  if(!a) return;
+  const snipEl=document.getElementById("liveSnippet");
+  if(!a){ snipEl.innerHTML=""; return; }
   let first=null;
   lines.forEach(el=>{
     const n=+el.dataset.n;
     if(n>=a[0]&&n<=a[1]){ el.classList.add("hl"); if(!first) first=el; }
   });
   if(first){ const pre=document.getElementById("liveCode"); pre.scrollTop=Math.max(0,first.offsetTop-44); }
+  // big "now executing" snippet: just the live range
+  const src=document.getElementById("src-controller").textContent.replace(/\n$/,"").split("\n");
+  let h="";
+  for(let n=a[0]; n<=a[1]; n++){
+    const line=src[n-1];
+    if(line===undefined) continue;
+    h+=`<span class="lc" data-n="${n}"><span class="codeln">${String(n).padStart(2,"0")}</span> ${line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</span>\n`;
+  }
+  snipEl.innerHTML=h;
 }
 const LIVE_PHASES={
   exit:[116,118], collect:[119,125], planSetup:[44,53],
