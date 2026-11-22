@@ -1,0 +1,1291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adventure — learn your code</title>
+<style>
+  :root{
+    --bg:#0f1117; --panel:#171b24; --panel2:#1d2230; --line:#2a3142;
+    --text:#e6e9f1; --muted:#9aa3b8; --dim:#6b738a;
+    --accent:#6ee7b7; --accent2:#38bdf8; --warn:#fbbf24; --bad:#f87171;
+    --wall:#313848; --floor:#171b24; --floor2:#1c2230;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{background:var(--bg); color:var(--text); font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; min-height:100vh}
+  .wrap{max-width:1120px; margin:0 auto; padding:18px 18px 60px}
+  header{border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:16px}
+  header h1{font-size:22px; letter-spacing:.3px}
+  header h1 .sub{color:var(--accent)}
+  header p{color:var(--muted); font-size:13.5px; margin-top:4px; max-width:760px; line-height:1.5}
+
+  /* toolbar */
+  .toolbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px}
+  .btn{background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:8px;
+       padding:7px 12px; font-size:13.5px; cursor:pointer; transition:background .12s, border .12s; font-weight:550}
+  .btn:hover{border-color:var(--accent2)}
+  .btn.on{background:#123a33; border-color:var(--accent); color:var(--accent)}
+  .btn.primary{background:var(--accent); color:#07120e; border-color:var(--accent)}
+  .btn.primary:hover{background:#7df2c7}
+  .btn:disabled{opacity:.38; cursor:not-allowed}
+  select{background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:7px 8px; font-size:13.5px}
+  .sep{width:1px; height:22px; background:var(--line); margin:0 2px}
+  label.lbl{font-size:12.5px; color:var(--muted)}
+
+  .layout{display:grid; grid-template-columns:minmax(420px,1fr) minmax(340px,1fr); gap:16px; align-items:start}
+  @media (max-width:880px){ .layout{grid-template-columns:1fr} }
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px}
+  .card h2{font-size:14px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin-bottom:10px; font-weight:600}
+
+  /* board */
+  #boardHost{display:flex; justify-content:center}
+  #board{display:grid; gap:2px; padding:8px; background:var(--panel2); border-radius:10px; border:1px solid var(--line)}
+  .cell{width:100%; aspect-ratio:1/1; border-radius:3px; display:flex; align-items:center; justify-content:center; position:relative; line-height:1}
+  .cell.wall{background:var(--wall)}
+  .cell.floor{background:var(--floor)}
+  .cell.floor.alt{background:var(--floor2)}
+  .cell .ico{font-size:1em}
+  .cell .badge{position:absolute; bottom:-1px; right:-1px; font-size:.5em; background:rgba(0,0,0,.72); color:#cfe3ff; padding:0 3px; border-radius:5px; font-weight:700}
+  .cell .badge.pblue{color:#cfe3ff}
+  .cell .badge.pred{color:#ffc9c9}
+  .cell.dim{opacity:.35}
+  .cell.hl{outline:2px solid var(--accent2); outline-offset:-1px}
+  .cell.path{background:#1f2a3a}
+  .cell.path .ico{opacity:.25}
+  .cell.start{background:#123a33}
+  .cell.exit{background:#3a2f12}
+
+  #status{margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; font-size:13px}
+  .chip{background:var(--panel2); border:1px solid var(--line); padding:6px 10px; border-radius:9px; color:var(--text)}
+  .chip b{color:var(--accent)}
+  .chip.warn{border-color:var(--warn)} .chip.warn b{color:var(--warn)}
+  #msg{margin-top:10px; font-size:13.5px; color:var(--muted); min-height:20px; line-height:1.5}
+  #msg.err{color:var(--bad)}
+  #msg.ok{color:var(--accent)}
+
+  /* tabs */
+  .tabs{display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap}
+  .tab{background:transparent; color:var(--muted); border:1px solid transparent; border-radius:8px; padding:6px 11px; font-size:13px; cursor:pointer}
+  .tab.on{background:var(--panel2); color:var(--text); border-color:var(--line)}
+  .tpanel{display:none}
+  .tpanel.on{display:block}
+
+  /* log */
+  #log{max-height:360px; overflow:auto; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; line-height:1.6}
+  #log .ln{color:var(--accent); margin-right:8px}
+  #log .la{color:var(--accent2)}
+  #log .why{color:var(--muted)}
+  #log .dead{color:var(--bad)}
+
+  /* code */
+  .section{margin-bottom:18px}
+  .section h3{font-size:14px; margin-bottom:2px}
+  .section h3 .f{color:var(--accent2); font-family:ui-monospace,monospace}
+  .section .blurb{color:var(--muted); font-size:12.8px; margin-bottom:8px; line-height:1.5}
+  pre.code{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+           overflow-x:auto; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.3px; line-height:1.55; color:#d7dce8}
+  .codeln{color:var(--dim); user-select:none}
+  .note{background:#0f2b2a; border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:7px 10px; margin:6px 0 10px;
+        font-size:12.6px; color:#c8d8d4; line-height:1.55}
+  .note b{color:var(--accent)}
+  .note .k{color:var(--accent2); font-family:ui-monospace,monospace}
+  .note.warn{background:#2b2110; border-color:var(--warn); color:#e6d5b8}
+  .note.warn b{color:var(--warn)}
+
+  .guide{margin:0; font-size:13.6px; color:var(--text); line-height:1.65}
+  .guide h4{color:var(--accent); margin:14px 0 6px; font-size:13.5px; text-transform:uppercase; letter-spacing:.4px}
+  .guide p{margin:6px 0}
+  .guide li{margin:4px 0 4px 18px}
+  .guide code{font-family:ui-monospace,monospace; color:var(--accent2); background:var(--panel2); padding:1px 5px; border-radius:5px; font-size:12.6px}
+  .guide .em{color:var(--warn)}
+  table.map{width:100%; border-collapse:collapse; margin:10px 0; font-size:12.8px}
+  table.map th, table.map td{border:1px solid var(--line); padding:6px 8px; text-align:left}
+  table.map th{background:var(--panel2); color:var(--muted); font-weight:600}
+  table.map .f{font-family:ui-monospace,monospace; color:var(--accent2)}
+
+  .legend{display:flex; flex-wrap:wrap; gap:10px; font-size:12.5px; color:var(--muted); margin-bottom:10px}
+  .legend span{display:inline-flex; align-items:center; gap:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Adventure <span class="sub">★</span> learn your code by playing it</h1>
+    <p>This game is a live, playable translation of the six Python components in <code>src/student/</code>.
+       The maps you see were generated by <b>your</b> <code>terrain_generator.py</code> and <code>level_generator.py</code>
+       (real output, captured from the actual code). Play it, or watch the AI from <code>controller.py</code> solve it — then
+       read each file line by line in the <b>Read code</b> tab.</p>
+  </header>
+
+  <div class="toolbar">
+    <button id="btnPlay" class="btn on">▶ Play</button>
+    <button id="btnAI" class="btn">🤖 Watch AI</button>
+    <div class="sep"></div>
+    <label class="lbl" for="levelSel">Level:</label>
+    <select id="levelSel"></select>
+    <button id="btnRandom" class="btn">🎲 Random</button>
+    <button id="btnReset" class="btn">⟲ Reset</button>
+    <div class="sep"></div>
+    <button id="btnStep" class="btn">Step</button>
+    <button id="btnRun" class="btn primary">Run ▸</button>
+    <label class="lbl" for="speed">speed</label>
+    <select id="speed"><option value="700">0.7s</option><option value="400" selected>0.4s</option><option value="180">0.18s</option><option value="60">fast</option></select>
+  </div>
+
+  <div class="layout">
+    <div class="card">
+      <h2>Map</h2>
+      <div class="legend">
+        <span>🟢 start</span><span>🏆 exit</span><span>💎 artifact (+value)</span>
+        <span>👾 enemy (engage to pass)</span><span>👻 patrol (dodge / time it)</span><span>🤖 you</span>
+      </div>
+      <div id="boardHost"><div id="board"></div></div>
+      <div id="status"></div>
+      <div id="msg">Use arrow keys / WASD to move. <b>C</b> collect · <b>E</b> engage · <b>Space</b> wait · <b>X</b> exit.</div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab on" data-t="story">📖 Story &amp; Actions</button>
+        <button class="tab" data-t="log">🗒 AI Log</button>
+        <button class="tab" data-t="code">📄 Read code</button>
+        <button class="tab" data-t="guide">🎤 Present</button>
+      </div>
+
+      <div class="tpanel on" id="t-story">
+        <div id="story"></div>
+      </div>
+      <div class="tpanel" id="t-log">
+        <div id="log"></div>
+      </div>
+      <div class="tpanel" id="t-code"></div>
+      <div class="tpanel" id="t-guide"><pre class="guide" id="guideText"></pre></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== REAL SOURCE (read-only, from src/student) ===================== -->
+<script type="text/plain" id="src-character">"""TODO: implement your character's immutable, canonical public identity."""
+from src.api import CharacterDefinition
+
+
+class Character:
+    """Character(agent_id); expose a read-only str agent_id property."""
+
+    def __init__(self, agent_id: str) -> None:
+        # Build the canonical definition up front so bad ids fail immediately.
+        self._definition = CharacterDefinition(agent_id)
+        self._agent_id = self._definition.agent_id
+
+    @property
+    def agent_id(self) -> str:
+        return self._agent_id
+</script>
+<script type="text/plain" id="src-artifact">"""TODO: implement initial artifact data; introductory gameplay has no artifacts."""
+from src.api import ArtifactDefinition, Position
+
+
+class Artifact:
+    """Expose read-only canonical identity, position, and nonnegative value."""
+
+    def __init__(self, artifact_id: str, position: Position, value: int) -> None:
+        # Build the canonical definition up front so bad ids/positions and
+        # negative values fail immediately instead of being silently clamped.
+        definition = ArtifactDefinition(artifact_id, position, value)
+        self._artifact_id = definition.artifact_id
+        self._position = definition.position
+        self._value = definition.value
+
+    @property
+    def artifact_id(self) -> str:
+        return self._artifact_id
+
+    @property
+    def position(self) -> Position:
+        return self._position
+
+    @property
+    def value(self) -> int:
+        return self._value
+</script>
+<script type="text/plain" id="src-enemy">"""TODO: implement initial enemy data; introductory gameplay has no enemies."""
+from src.api import EnemyDefinition, Position
+
+
+class Enemy:
+    """Expose read-only identity, position, and nonnegative encounter penalty."""
+
+    def __init__(self, enemy_id: str, position: Position, encounter_penalty: int) -> None:
+        # Mirror Character/Artifact: validate through the canonical definition so
+        # bad ids/positions and negative penalties fail immediately.
+        definition = EnemyDefinition(enemy_id, position, encounter_penalty)
+        self._enemy_id = definition.enemy_id
+        self._position = definition.position
+        self._encounter_penalty = definition.encounter_penalty
+
+    @property
+    def enemy_id(self) -> str:
+        return self._enemy_id
+
+    @property
+    def position(self) -> Position:
+        return self._position
+
+    @property
+    def encounter_penalty(self) -> int:
+        return self._encounter_penalty
+</script>
+<script type="text/plain" id="src-terrain">"""TODO: generate canonical terrain deterministically from specification and seed."""
+import random
+
+from src.api import Terrain, TerrainGenerationSpec, TerrainTopology
+
+
+class TerrainGenerator:
+    """Keep state local; identical inputs must also agree across fresh instances."""
+
+    def __init__(self) -> None:
+        self._last_seed = None
+        self._last_spec = None
+        self._generated = 0
+
+    @staticmethod
+    def _neighbors(row, column):
+        return ((row - 1, column), (row + 1, column),
+                (row, column - 1), (row, column + 1))
+
+    def _straight_path(self, rng, rows, columns, target):
+        # A single line of floor on one axis. Prefer horizontal when it fits.
+        if columns >= target:
+            row = rng.randrange(rows)
+            start_column = rng.randrange(0, columns - target + 1)
+            return {(row, column) for column in range(start_column, start_column + target)}
+        column = rng.randrange(columns)
+        start_row = rng.randrange(0, rows - target + 1)
+        return {(row, column) for row in range(start_row, start_row + target)}
+
+    def _bent_path(self, rng, rows, columns, target):
+        # One L-shape spanning both axes: a horizontal arm plus a vertical arm
+        # sharing the corner, with total open cells == target.
+        for _ in range(200):
+            row = rng.randrange(rows)
+            column = rng.randrange(columns)
+            # horizontal length h in [2, columns-column], vertical v in [2, rows-row]
+            # with h + v - 1 == target.
+            v_min, v_max = 2, rows - row
+            h_min, h_max = 2, columns - column
+            low = max(h_min, target + 1 - v_max)
+            high = min(h_max, target + 1 - v_min)
+            if low <= high:
+                h = rng.randint(low, high)
+                v = target + 1 - h
+                cells = {(row, c) for c in range(column, column + h)}
+                cells |= {(r, column) for r in range(row + 1, row + v)}
+                return cells
+        # Degenerate fallback; real BENT specs always fit.
+        return self._straight_path(rng, rows, columns, target)
+
+    def _grow_tree(self, rng, rows, columns, target, acyclic=False):
+        # Grow a connected region by expanding a random frontier. For a tree,
+        # a new cell may touch exactly one open neighbor, which prevents cycles.
+        start = (rng.randrange(rows), rng.randrange(columns))
+        opened = {start}
+        frontier = [neighbor for neighbor in self._neighbors(*start)
+                    if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < columns]
+        while len(opened) < target and frontier:
+            index = rng.randrange(len(frontier))
+            cell = frontier.pop(index)
+            connections = [neighbor for neighbor in self._neighbors(*cell)
+                           if neighbor in opened]
+            if acyclic and len(connections) != 1:
+                continue
+            if not connections:
+                continue
+            opened.add(cell)
+            for neighbor in self._neighbors(*cell):
+                if (0 <= neighbor[0] < rows and 0 <= neighbor[1] < columns
+                        and neighbor not in opened and neighbor not in frontier):
+                    frontier.append(neighbor)
+        return opened
+
+    @staticmethod
+    def _has_branch(opened):
+        for row, column in opened:
+            degree = sum((neighbor in opened) for neighbor in ((row - 1, column), (row + 1, column), (row, column - 1), (row, column + 1)))
+            if degree >= 3:
+                return True
+        return False
+
+    def generate_terrain(self, specification: TerrainGenerationSpec, seed: int) -> Terrain:
+        self._last_seed = seed
+        self._last_spec = specification
+        self._generated += 1
+        rng = random.Random(seed)
+        rows, columns = specification.rows, specification.columns
+        low, high = specification.min_open_tiles, specification.max_open_tiles
+        max_cells = rows * columns
+        target = min(high, max_cells) if low <= high else min(low, max_cells)
+        if low != high:
+            target = rng.randint(low, min(high, max_cells))
+        topology = specification.topology
+        if topology is TerrainTopology.STRAIGHT_PATH:
+            opened = self._straight_path(rng, rows, columns, target)
+        elif topology is TerrainTopology.BENT_PATH:
+            opened = self._bent_path(rng, rows, columns, target)
+        elif topology is TerrainTopology.BRANCHING_TREE:
+            # Grow candidate trees until one hits the target open count and
+            # contains a degree-3 branch. Each attempt advances the same seeded
+            # rng, so the result stays deterministic.
+            attempts = max(specification.max_attempts * 4, 8)
+            opened = self._grow_tree(rng, rows, columns, target, acyclic=True)
+            for _ in range(attempts):
+                if len(opened) == target and self._has_branch(opened):
+                    break
+                opened = self._grow_tree(rng, rows, columns, target, acyclic=True)
+        else:
+            opened = self._grow_tree(rng, rows, columns, target)
+        grid = [['#'] * columns for _ in range(rows)]
+        for row, column in opened:
+            grid[row][column] = '.'
+        return Terrain(terrain_rows=tuple(''.join(entry) for entry in grid))
+</script>
+<script type="text/plain" id="src-level">"""TODO: build a canonical level using the injected terrain generator."""
+import random
+
+from src.api import (
+    ArtifactDefinition, CharacterDefinition, EnemyDefinition, LevelDefinition,
+    LevelSpecification, Position, TerrainGeneratorContract, TerrainTopology,
+)
+
+
+class LevelGenerator:
+    """Use the supplied TerrainGeneratorContract; do not instantiate a replacement."""
+
+    def __init__(self, terrain_generator: TerrainGeneratorContract) -> None:
+        self._generator = terrain_generator
+
+    def _open_tiles(self, terrain):
+        return [
+            (row, column)
+            for row in range(terrain.rows)
+            for column in range(terrain.columns)
+            if terrain.is_traversable(Position(row, column))
+        ]
+
+    def _degree_one(self, terrain, open_tiles):
+        result = []
+        for row, column in open_tiles:
+            degree = sum(
+                (row + dr, column + dc) in open_tiles
+                for dr, dc in ((0, 1), (0, -1), (1, 0), (-1, 0))
+            )
+            if degree == 1:
+                result.append((row, column))
+        return result
+
+    def _pick_endpoints(self, rng, specification, terrain, open_tiles):
+        topology = specification.terrain_spec.topology
+        if topology in (TerrainTopology.STRAIGHT_PATH, TerrainTopology.BENT_PATH):
+            ends = self._degree_one(terrain, open_tiles)
+            if len(ends) >= 2:
+                return Position(*ends[0]), Position(*ends[1])
+        # General / tree: start at the top-left open tile, then choose an exit
+        # whose route distance fits the requested bounds.
+        start = Position(*open_tiles[0])
+        low, high = specification.min_route_moves, specification.max_route_moves
+        for row, column in open_tiles[1:]:
+            candidate = Position(row, column)
+            if low <= candidate.manhattan_distance(start) <= high:
+                return start, candidate
+        return start, Position(*open_tiles[-1])
+
+    def _place_entities(self, rng, specification, open_tiles, start, exit_pos):
+        start_pair = (start.row, start.column)
+        exit_pair = (exit_pos.row, exit_pos.column)
+        artifact_blocked = set()
+        enemy_blocked = {start_pair}  # enemies never occupy the start
+        if not specification.allow_entities_on_endpoints:
+            artifact_blocked |= {start_pair, exit_pair}
+            enemy_blocked.add(exit_pair)
+        artifact_pool = [tile for tile in open_tiles if tile not in artifact_blocked]
+        enemy_pool = [tile for tile in open_tiles if tile not in enemy_blocked]
+        rng.shuffle(artifact_pool)
+        rng.shuffle(enemy_pool)
+        used = set()
+        artifacts = []
+        for index in range(specification.artifact_count):
+            if not artifact_pool:
+                break
+            tile = artifact_pool.pop()
+            if not specification.allow_entity_overlap:
+                while tile in used and artifact_pool:
+                    tile = artifact_pool.pop()
+                if tile in used:
+                    break
+            used.add(tile)
+            value = rng.randint(specification.artifact_value_min, specification.artifact_value_max)
+            artifacts.append(ArtifactDefinition(f"ART-{index + 1}", Position(*tile), value))
+        enemies = []
+        for index in range(specification.enemy_count):
+            if not enemy_pool:
+                break
+            tile = enemy_pool.pop()
+            if not specification.allow_entity_overlap:
+                while tile in used and enemy_pool:
+                    tile = enemy_pool.pop()
+                if tile in used:
+                    break
+            used.add(tile)
+            penalty = rng.randint(specification.enemy_penalty_min, specification.enemy_penalty_max)
+            enemies.append(EnemyDefinition(f"ENM-{index + 1}", Position(*tile), penalty))
+        return tuple(artifacts), tuple(enemies)
+
+    def generate_level(self, specification: LevelSpecification, seed: int) -> LevelDefinition:
+        rng = random.Random(seed)
+        terrain = self._generator.generate_terrain(specification.terrain_spec, seed)
+        open_tiles = self._open_tiles(terrain)
+        start, exit_pos = self._pick_endpoints(rng, specification, terrain, open_tiles)
+        artifacts, enemies = self._place_entities(rng, specification, open_tiles, start, exit_pos)
+        return LevelDefinition(
+            level_id=specification.level_id,
+            profile_id=specification.profile_id,
+            seed=seed,
+            terrain=terrain,
+            start=start,
+            exit=exit_pos,
+            character=CharacterDefinition(specification.agent_id),
+            artifacts=artifacts,
+            enemies=enemies,
+        )
+</script>
+<script type="text/plain" id="src-controller">"""TODO: select one public action from each immutable world observation."""
+import heapq
+
+from src.api import Position, WorldAction, WorldActionType, WorldSnapshot
+
+
+class AgentController:
+    """A new controller is constructed for each run; arrival still needs EXIT."""
+
+    def __init__(self) -> None:
+        self.turn_count = 0
+
+    @staticmethod
+    def _patrol_position(patrol, turn):
+        # The patrol moves once per accepted action, so its phase at `turn` is
+        # purely a function of the schedule and the number of accepted actions.
+        phase = (patrol.initial_phase + turn) % len(patrol.positions)
+        return patrol.positions[phase]
+
+    def _patrol_cells(self, state, turn):
+        return [self._patrol_position(patrol, turn) for patrol in state.level.patrols]
+
+    def _static_enemies(self, state):
+        # Enemies that own a patrol are dynamic and cannot be engaged; only the
+        # remaining static, undefeated enemies are clearable blockers.
+        patrol_ids = {patrol.enemy_id for patrol in state.level.patrols}
+        return [
+            enemy for enemy in state.level.enemies
+            if enemy.enemy_id not in state.defeated_enemy_ids
+            and enemy.enemy_id not in patrol_ids
+        ]
+
+    def _plan(self, state):
+        """Lowest-cost path over (position, turn, defeated) states.
+
+        Every accepted action advances the patrol clock by one turn, so routes
+        are planned against the *future* positions of each patrol, not just the
+        current snapshot. Static enemies are entered by ENGAGEing them first
+        (which costs one action plus the encounter penalty); patrols are never
+        engaged — only timed around. Total cost is actions plus encounter
+        penalties, matching the workbench's scoring. Returns a list of
+        (action_type, target_id) steps, or None if the exit is unreachable.
+        """
+        limit = state.deadline_turn if state.deadline_turn is not None else state.max_turns
+        start_defeated = frozenset(state.defeated_enemy_ids)
+        static_enemies = self._static_enemies(state)
+        start = (state.agent_position, state.turn, start_defeated)
+        dist = {start: 0}
+        previous = {start: None}
+        pending = [(0, start)]
+        goal = None
+        moves = ((0, 1, WorldActionType.MOVE_EAST), (0, -1, WorldActionType.MOVE_WEST),
+                 (1, 0, WorldActionType.MOVE_SOUTH), (-1, 0, WorldActionType.MOVE_NORTH))
+        while pending:
+            cost, current = heapq.heappop(pending)
+            if current not in dist or cost > dist[current]:
+                continue
+            position, turn, defeated = current
+            if position == state.level.exit:
+                goal = current
+                break
+            if turn + 1 >= limit:
+                continue
+            patrol_now = self._patrol_cells(state, turn)
+            patrol_next = self._patrol_cells(state, turn + 1)
+            for step_row, step_column, action_type in moves:
+                step = Position(position.row + step_row, position.column + step_column)
+                if not state.level.terrain.is_traversable(step):
+                    continue
+                # The next tile must be clear now and clear right after the move
+                # advances the patrol clock (otherwise the agent collides).
+                if step in patrol_now or step in patrol_next:
+                    continue
+                # A static enemy cell is entered only after ENGAGEing it, so it
+                # is not a plain-move destination.
+                if any(enemy.enemy_id not in defeated and enemy.position == step
+                       for enemy in static_enemies):
+                    continue
+                node = (step, turn + 1, defeated)
+                if cost + 1 < dist.get(node, float("inf")):
+                    dist[node] = cost + 1
+                    previous[node] = (current, action_type, None)
+                    heapq.heappush(pending, (cost + 1, node))
+            # Staying put for one accepted action (ENGAGE / WAIT) is only safe if
+            # no patrol is here now and none arrives afterwards.
+            if position not in patrol_now and position not in patrol_next:
+                for enemy in static_enemies:
+                    if (enemy.enemy_id not in defeated
+                            and abs(enemy.position.row - position.row)
+                            + abs(enemy.position.column - position.column) == 1):
+                        node = (position, turn + 1, defeated | {enemy.enemy_id})
+                        step_cost = cost + 1 + enemy.encounter_penalty
+                        if step_cost < dist.get(node, float("inf")):
+                            dist[node] = step_cost
+                            previous[node] = (current, WorldActionType.ENGAGE, enemy.enemy_id)
+                            heapq.heappush(pending, (step_cost, node))
+                if WorldActionType.WAIT in state.allowed_actions:
+                    node = (position, turn + 1, defeated)
+                    if cost + 1 < dist.get(node, float("inf")):
+                        dist[node] = cost + 1
+                        previous[node] = (current, WorldActionType.WAIT, None)
+                        heapq.heappush(pending, (cost + 1, node))
+        if goal is None:
+            return None
+        steps = []
+        current = goal
+        while current != start:
+            current, action_type, target = previous[current]
+            steps.append((action_type, target))
+        steps.reverse()
+        return steps
+
+    def choose_action(self, state, agent_id) -> WorldAction:
+        self.turn_count += 1
+        position = state.agent_position
+        # If we are standing on the exit tile, leave.
+        if position == state.level.exit:
+            return WorldAction(action_type=WorldActionType.EXIT)
+        # Collect an uncollected artifact on this tile, as long as no patrol is
+        # about to arrive on this cell after the collection advances the clock.
+        for artifact in state.level.artifacts:
+            if (artifact.artifact_id not in state.collected_artifact_ids
+                    and artifact.position == position
+                    and position not in self._patrol_cells(state, state.turn + 1)):
+                return WorldAction(action_type=WorldActionType.COLLECT, target_id=artifact.artifact_id)
+        plan = self._plan(state)
+        if plan:
+            action_type, target_id = plan[0]
+            return WorldAction(action_type=action_type, target_id=target_id)
+        return WorldAction.wait()
+</script>
+
+<script>
+/* =====================================================================
+   ADVENTURE — a playable explanation of src/student/
+   ===================================================================== */
+
+/* ---------- tiny seeded PRNG (mulberry32). Maps 1:1 to random.Random shapes,
+   not to Python's exact Mersenne Twister sequences. ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+function rngFrom(seed){return mulberry32(seed>>>0)}
+function rr(rng,n){return Math.floor(rng()*n)}
+function ri(rng,lo,hi){return lo+Math.floor(rng()*(hi-lo+1))}
+
+/* ===================== AUTHENTIC LEVELS (from the real Python code) ===================== */
+const LEVELS = [
+ {name:"Straight path (seed 123)",topology:"STRAIGHT_PATH",seed:123,rows:5,cols:20,
+  grid:["####################","####################","..............######","####################","####################"],
+  start:[2,0],exit:[2,13],
+  artifacts:[["ART-1",2,1,17],["ART-2",2,5,7],["ART-3",2,2,5],["ART-4",2,7,15]],
+  enemies:[["ENM-1",2,3,5]]},
+ {name:"Bent path (seed 55)",topology:"BENT_PATH",seed:55,rows:8,cols:8,
+  grid:["####....","####.###","####.###","####.###","####.###","####.###","####.###","####.###"],
+  start:[0,7],exit:[7,4],
+  artifacts:[["ART-1",0,5,15],["ART-2",1,4,18],["ART-3",6,4,6]],
+  enemies:[["ENM-1",2,4,4],["ENM-2",0,6,2]]},
+ {name:"Bent path (seed 3)",topology:"BENT_PATH",seed:3,rows:8,cols:8,
+  grid:["#.....##","#.######","#.######","#.######","#.######","#.######","#.######","########"],
+  start:[0,5],exit:[6,1],
+  artifacts:[["ART-1",0,4,17],["ART-2",0,3,9],["ART-3",4,1,12]],
+  enemies:[["ENM-1",1,1,3],["ENM-2",5,1,6]]},
+ {name:"Branching tree (seed 7)",topology:"BRANCHING_TREE",seed:7,rows:8,cols:8,
+  grid:["##.###..","##.#...#","##...#..","##.##..#","######..","#####..#","######.#","########"],
+  start:[0,2],exit:[0,6],
+  artifacts:[["ART-1",3,2,9],["ART-2",1,6,8],["ART-3",3,6,14],["ART-4",6,6,10]],
+  enemies:[["ENM-1",1,4,2],["ENM-2",4,6,6],["ENM-3",1,2,6]]},
+ {name:"Branching tree (seed 202)",topology:"BRANCHING_TREE",seed:202,rows:8,cols:8,
+  grid:["########","########","########","###.####","###..#.#",".##.#...",".....#.#",".#.#...."],
+  start:[3,3],exit:[4,6],
+  artifacts:[["ART-1",6,6,6],["ART-2",7,4,10],["ART-3",7,0,8]],
+  enemies:[["ENM-1",6,3,2],["ENM-2",5,5,5]]},
+ {name:"General (seed 99)",topology:"GENERAL",seed:99,rows:8,cols:8,
+  grid:["########","########",".#.#####",".#.#####",".#..####","....####","#....###","....####"],
+  start:[2,0],exit:[3,2],
+  artifacts:[["ART-1",6,4,20],["ART-2",7,3,15],["ART-3",4,2,17],["ART-4",6,1,6]],
+  enemies:[["ENM-1",5,1,4],["ENM-2",7,0,6],["ENM-3",6,3,2]]},
+ {name:"General (seed 7)",topology:"GENERAL",seed:7,rows:8,cols:8,
+  grid:["####....","#####...","####....","###.....","#####..#","########","########","########"],
+  start:[0,4],exit:[0,7],
+  artifacts:[["ART-1",3,4,6],["ART-2",1,5,12],["ART-3",2,5,6]],
+  enemies:[["ENM-1",3,7,6],["ENM-2",0,6,3]]},
+];
+
+/* ===================== WORLD MODEL ===================== */
+function key(r,c){return r+","+c}
+function manh(a,b){return Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])}
+
+function buildWorld(lvl){
+  const w = {
+    name:lvl.name, topology:lvl.topology, seed:lvl.seed,
+    rows:lvl.rows, cols:lvl.cols, grid:lvl.grid,
+    start:lvl.start, exit:lvl.exit,
+    maxTurns:60,
+    artifacts:lvl.artifacts.map(a=>({id:a[0],r:a[1],c:a[2],value:a[3]})),
+    enemies:lvl.enemies.map(e=>({id:e[0],r:e[1],c:e[2],penalty:e[3]})),
+    patrols:[],
+  };
+  w.open = new Set();
+  for(let r=0;r<w.rows;r++) for(let c=0;c<w.cols;c++) if(w.grid[r][c]===".") w.open.add(key(r,c));
+  w.patrols = buildPatrols(w);
+  w.artifactByKey = {}; w.enemyByKey = {};
+  for(const a of w.artifacts) w.artifactByKey[key(a.r,a.c)] = a;
+  for(const e of w.enemies) w.enemyByKey[key(e.r,e.c)] = e;
+  return w;
+}
+
+/* Build one patrol along the longest run of open cells, keeping off start/exit.
+   This mirrors "patrol schedules are separate instructor values" — the student code
+   doesn't make them; they're part of the level/world. */
+function buildPatrols(w){
+  let best=null;
+  for(let r=0;r<w.rows;r++){
+    let run=[];
+    for(let c=0;c<w.cols;c++){
+      if(w.open.has(key(r,c)) && !(r===w.start[0]&&c===w.start[1]) && !(r===w.exit[0]&&c===w.exit[1])){
+        run.push([r,c]);
+      } else {
+        if(run.length>3 && run.length>(best?best.length:0)) best=run;
+        run=[];
+      }
+    }
+    if(run.length>3 && run.length>(best?best.length:0)) best=run;
+  }
+  if(!best) return [];
+  // Only place a patrol where it leaves an alternate start→exit route, so it is
+  // actually dodgeable (a 1-wide corridor fully covered by a patrol is impassable).
+  const blocked=new Set(best.map(([r,c])=>key(r,c)));
+  if(!stillConnected(w, blocked)) return [];
+  return [{enemy_id:"PAT-1", positions:best, initial_phase:0}];
+}
+/* BFS over open cells excluding `blocked`; does start still reach exit? */
+function stillConnected(w, blocked){
+  const goal=key(w.exit[0],w.exit[1]);
+  const start=key(w.start[0],w.start[1]);
+  if(blocked.has(start)||blocked.has(goal)) return false;
+  const seen=new Set([start]), q=[w.start];
+  while(q.length){
+    const [r,c]=q.shift();
+    for(const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nr=r+dr, nc=c+dc, k2=key(nr,nc);
+      if(nr>=0&&nr<w.rows&&nc>=0&&nc<w.cols && w.open.has(k2) && !blocked.has(k2) && !seen.has(k2)){
+        if(k2===goal) return true;
+        seen.add(k2); q.push([nr,nc]);
+      }
+    }
+  }
+  return seen.has(goal);
+}
+
+function isTraversable(w,r,c){ return r>=0&&r<w.rows&&c>=0&&c<w.cols && w.grid[r][c]==="." }
+
+/* patrol cell keys at a given turn */
+function patrolKeys(w,turn){
+  const set = new Set();
+  for(const p of w.patrols){ const i=(p.initial_phase+turn)%p.positions.length; const q=p.positions[i]; set.add(key(q[0],q[1])); }
+  return set;
+}
+
+const ALLOWED = ["MOVE_NORTH","MOVE_SOUTH","MOVE_WEST","MOVE_EAST","WAIT","EXIT","COLLECT","ENGAGE"];
+
+/* ===================== GAME STATE ===================== */
+let world=null, state=null;
+let mode="play";              // "play" | "ai"
+let aiController=null, aiTimer=null, aiPlan=[];
+
+function newState(){
+  return {
+    turn:0, r:world.start[0], c:world.start[1],
+    collected:new Set(), defeated:new Set(),
+    score:0, penalties:0,
+    over:false, win:false, log:[],
+  };
+}
+
+/* ===================== SIMULATOR (host side: applies actions) ===================== */
+function blockedMove(w,s,tr,tc){
+  const now=patrolKeys(w,s.turn), next=patrolKeys(w,s.turn+1);
+  if(!isTraversable(w,tr,tc)) return "wall";
+  if(now.has(key(tr,tc))||next.has(key(tr,tc))) return "patrol";
+  const e=world.enemyByKey[key(tr,tc)];
+  if(e && !s.defeated.has(e.id)) return "enemy";
+  return null;
+}
+
+function applyAction(w,s,act,log){
+  if(s.over) return;
+  const dr = act==="MOVE_NORTH"?-1:act==="MOVE_SOUTH"?1:0;
+  const dc = act==="MOVE_WEST"?-1:act==="MOVE_EAST"?1:0;
+  if(dr||dc){
+    const tr=s.r+dr, tc=s.c+dc;
+    const why=blockedMove(w,s,tr,tc);
+    if(why){ (log||[]).push({a:"blocked",t:act,why:"can't move "+(why==="wall"?"into a wall":why==="patrol"?"into a patrol": "into an undefeated enemy")}); return; }
+    s.r=tr; s.c=tc; advanceLike(s,log,act); return;
+  }
+  if(act==="COLLECT"){
+    const a=world.artifactByKey[key(s.r,s.c)];
+    if(a && !s.collected.has(a.id) && !patrolKeys(w,s.turn+1).has(key(s.r,s.c))){
+      s.collected.add(a.id); s.score+=a.value; advanceTurn(s,log,act,"collected "+a.id+" +"+a.value);
+    } else { (log||[]).push({a:"blocked",t:act,why:"nothing to collect here (or a patrol arrives)"}); }
+    return;
+  }
+  if(act==="ENGAGE"){
+    let target=null;
+    for(const e of world.enemies){
+      if(!s.defeated.has(e.id) && !world.patrols.some(p=>p.enemy_id===e.id) && manh([s.r,s.c],[e.r,e.c])===1){ target=e; break; }
+    }
+    if(target){ s.defeated.add(target.id); s.score-=target.penalty; s.penalties+=target.penalty; advanceTurn(s,log,act,"defeated "+target.id+" -"+target.penalty+" pts"); }
+    else { (log||[]).push({a:"blocked",t:act,why:"no adjacent enemy to engage"}); }
+    return;
+  }
+  if(act==="WAIT"){ advanceTurn(s,log,act,"wait one turn"); return; }
+  if(act==="EXIT"){
+    if(s.r===world.exit[0]&&s.c===world.exit[1]){ s.win=true; s.over=true; (log||[]).push({a:"win",t:act,why:"reached the exit! 🎉"}); }
+    else { (log||[]).push({a:"blocked",t:act,why:"you're not on the exit tile"}); }
+    return;
+  }
+}
+function advanceTurn(s,log,act,why){ s.turn++; if(s.turn>=world.maxTurns){ s.over=true; } if(why)(log||[]).push({a:act.toLowerCase(),t:act,why}); }
+function advanceLike(s,log,act){ // move branch
+  s.turn++; if(s.turn>=world.maxTurns) s.over=true;
+  if(log)(log||[]).push({a:act.toLowerCase(),t:act,why:"moved "+act.replace("MOVE_","").toLowerCase()});
+}
+
+/* ===================== CONTROLLER (port of controller.py) ===================== */
+const MOVES = [[0,1,"MOVE_EAST"],[0,-1,"MOVE_WEST"],[1,0,"MOVE_SOUTH"],[-1,0,"MOVE_NORTH"]];
+
+function patrolPos(p,turn){ const i=(p.initial_phase+turn)%p.positions.length; return p.positions[i]; }
+function staticEnemies(w,s){
+  const patrolIds=new Set(w.patrols.map(p=>p.enemy_id));
+  return w.enemies.filter(e=>!s.defeated.has(e.id)&&!patrolIds.has(e.id));
+}
+
+function planPath(w,s){
+  const limit = w.maxTurns || 9999;
+  const startDef = [...s.defeated].sort().join(",");
+  const startKey = key(s.r,s.c)+"|"+s.turn+"|"+startDef;
+  const dist=new Map(), prev=new Map();
+  dist.set(startKey,0); prev.set(startKey,null);
+  const pending=[[0,startKey]];
+  let goal=null;
+  const INF=Infinity;
+
+  function decode(k){ const [p,t,d]=k.split("|"); const [r,c]=p.split(",").map(Number); return {r,c,turn:Number(t),def:new Set(d?d.split(",").filter(x=>x):[])}; }
+  function makeKey(r,c,t,def){ return key(r,c)+"|"+t+"|"+[...def].sort().join(","); }
+  function relax(nk,nc,back){
+    if(nc < (dist.has(nk)?dist.get(nk):INF)){
+      dist.set(nk,nc); prev.set(nk,back); pending.push([nc,nk]);
+    }
+  }
+
+  while(pending.length){
+    let minI=0;
+    for(let i=1;i<pending.length;i++) if(pending[i][0]<pending[minI][0]) minI=i;
+    const [cost,cur]=pending.splice(minI,1)[0];
+    if(cost !== dist.get(cur)) continue;            // stale entry → skip
+    const curObj=decode(cur);
+    if(curObj.r===world.exit[0]&&curObj.c===world.exit[1]){ goal=cur; break; }
+    if(curObj.turn+1>=limit) continue;
+    const patrolNow=patrolKeys(w,curObj.turn), patrolNext=patrolKeys(w,curObj.turn+1);
+    for(const [dr,dc,act] of MOVES){
+      const tr=curObj.r+dr, tc=curObj.c+dc;
+      if(!isTraversable(w,tr,tc)) continue;
+      const kk=key(tr,tc);
+      if(patrolNow.has(kk)||patrolNext.has(kk)) continue;
+      const e=world.enemyByKey[kk];
+      if(e && !curObj.def.has(e.id) && !world.patrols.some(p=>p.enemy_id===e.id)) continue;
+      relax(makeKey(tr,tc,curObj.turn+1,curObj.def), cost+1, [cur,act,null]);
+    }
+    const posK=key(curObj.r,curObj.c);
+    if(!patrolNow.has(posK)&&!patrolNext.has(posK)){
+      for(const e of staticEnemies(w,{defeated:curObj.def})){
+        if(manh([curObj.r,curObj.c],[e.r,e.c])===1){
+          const def2=new Set(curObj.def); def2.add(e.id);
+          relax(makeKey(curObj.r,curObj.c,curObj.turn+1,def2), cost+1+e.penalty, [cur,"ENGAGE",e.id]);
+        }
+      }
+      if(ALLOWED.includes("WAIT")){
+        relax(makeKey(curObj.r,curObj.c,curObj.turn+1,curObj.def), cost+1, [cur,"WAIT",null]);
+      }
+    }
+  }
+  if(goal===null) return null;
+  const steps=[]; let cur=goal;
+  while(cur!==startKey){
+    const ent=prev.get(cur); if(!ent) break;
+    cur=ent[0]; steps.push([ent[1],ent[2]]);
+  }
+  steps.reverse();
+  return steps;
+}
+
+function chooseAction(w,s){
+  const posK=key(s.r,s.c);
+  if(s.r===world.exit[0]&&s.c===world.exit[1]) return {type:"EXIT",target:null};
+  const a=world.artifactByKey[posK];
+  if(a && !s.collected.has(a.id) && !patrolKeys(w,s.turn+1).has(posK)) return {type:"COLLECT",target:a.id};
+  const plan=planPath(w,s);
+  if(plan && plan.length) return {type:plan[0][0],target:plan[0][1]};
+  return {type:"WAIT",target:null};
+}
+
+/* ===================== RENDER ===================== */
+const boardEl=document.getElementById("board");
+const statusEl=document.getElementById("status");
+const msgEl=document.getElementById("msg");
+
+const ICO = {
+  wall:"", floor:"", start:"🟢", exit:"🏆",
+  artifact:"💎", enemy:"👾", patrol:"👻", player:"🤖",
+};
+
+function render(pathCells){
+  const showPatrols = (mode!=="play"); // keep ghosts visible in AI mode too
+  const cellSize=Math.max(15,Math.floor(560/world.cols));
+  boardEl.style.fontSize=cellSize+"px";
+  boardEl.style.gridTemplateColumns=`repeat(${world.cols}, minmax(0,1fr))`;
+  boardEl.innerHTML="";
+  const now=patrolKeys(world,state.turn);
+  const patOcc=new Set();
+  for(const p of world.patrols){ const q=patrolPos(p,state.turn); patOcc.add(key(q[0],q[1])); }
+  for(let r=0;r<world.rows;r++){
+    for(let c=0;c<world.cols;c++){
+      const d=document.createElement("div");
+      const kk=key(r,c);
+      const isWall=world.grid[r][c]==="#";
+      d.className="cell "+(isWall?"wall":((r+c)%2===0?"floor":"floor alt"));
+      let ico="";
+      if((r===state.r&&c===state.c)) ico=ICO.player;
+      else if(kk===key(world.exit[0],world.exit[1])) ico=ICO.exit;
+      else if(kk===key(world.start[0],world.start[1])) ico=ICO.start;
+      else if(world.artifactByKey[kk] && !state.collected.has(world.artifactByKey[kk].id)){ ico=ICO.artifact; }
+      else if(world.enemyByKey[kk] && !state.defeated.has(world.enemyByKey[kk].id)){ ico=ICO.enemy; }
+      else if(patOcc.has(kk)){ ico=ICO.patrol; }
+      if(ico){ d.innerHTML=`<span class="ico">${ico}</span>`; }
+      if(world.artifactByKey[kk] && !state.collected.has(world.artifactByKey[kk].id)){ d.innerHTML+=`<span class="badge pblue">${world.artifactByKey[kk].value}</span>`; }
+      else if(world.enemyByKey[kk] && !state.defeated.has(world.enemyByKey[kk].id)){ d.innerHTML+=`<span class="badge pred">${world.enemyByKey[kk].penalty}</span>`; }
+      if(pathCells && pathCells.has(kk) && !(r===state.r&&c===state.c)){ d.classList.add("path"); }
+      boardEl.appendChild(d);
+    }
+  }
+  statusEl.innerHTML = `
+    <span class="chip">Turn <b>${state.turn}</b> / ${world.maxTurns}</span>
+    <span class="chip">Score <b>${state.score}</b></span>
+    <span class="chip">Artifacts <b>${state.collected.size}</b>/${world.artifacts.length}</span>
+    <span class="chip">Enemies defeated <b>${state.defeated.size}</b>/${world.enemies.length}</span>`;
+}
+
+function message(txt,cls){ msgEl.textContent=txt; msgEl.className=cls||""; }
+
+/* ===================== STORY PANEL (play instructions + world each) ===================== */
+const ACTION_HELP = [
+  ["Move","Arrow keys / WASD — N/S/E/W. One turn per move. You can't walk through walls, a patrol (now or next turn), or an undefeated enemy."],
+  ["Collect (C)","When standing on a 💎. Adds its value to your score. Costs one turn."],
+  ["Engage (E)","When next to a 👾 (Manhattan distance 1). Defeats it, subtracts its penalty from your score. Costs one turn. You must do this before you can walk over that enemy."],
+  ["Wait (Space)","Do nothing for one turn — used to time patrols. (The AI uses this a lot.)"],
+  ["Exit (X)","Only works when you're standing on the 🏆. That's how you win."],
+];
+function renderStory(){
+  const el=document.getElementById("story");
+  let h=`<div class="guide"><h4>What you're playing</h4><p>You are the <b>character</b> (${"character.py"}). The grid is the <b>terrain</b> (${"terrain_generator.py"}). The gems and monsters were placed by the <b>level generator</b> (${"level_generator.py"}). The moving ghosts are <b>patrols</b> — the AI in ${"controller.py"} exists mainly to dodge and time those.</p>`;
+  h+=`<h4>Your actions</h4><ul>`;
+  for(const [t,d] of ACTION_HELP) h+=`<li><b>${t}</b> — ${d}</li>`;
+  h+=`</ul><h4>The goal</h4><p>Collect as much score as you can and reach the exit before turn ${world.maxTurns}. Engaging enemies costs points, so weigh it against going around. Patrols are never killable — you can only time them. You can always <b>Watch AI</b> to see how a perfect player solves the same board.</p></div>`;
+  el.innerHTML=h;
+}
+
+/* ===================== AI LOG ===================== */
+function logLine(entry){
+  const log=document.getElementById("log");
+  const d=document.createElement("div");
+  const cls=entry.a==="win"?"dead":entry.a==="blocked"?"dead":"";
+  d.className=cls;
+  d.innerHTML=`<span class="ln">T${state.turn}</span><span class="la">${entry.t||""}</span> <span class="why">${entry.why||""}</span>`;
+  log.appendChild(d); log.scrollTop=log.scrollHeight;
+}
+function clearLog(){ document.getElementById("log").innerHTML=""; }
+
+/* ===================== MODES ===================== */
+function setMode(m){
+  mode=m;
+  document.getElementById("btnPlay").classList.toggle("on",mode==="play");
+  document.getElementById("btnAI").classList.toggle("on",mode==="ai");
+  document.getElementById("btnRun").textContent = mode==="ai"?"Run ▸":"Run AI ▸";
+  stopAI();
+  if(mode==="ai"){ startAI(); } else { render(); }
+}
+
+function startAI(){
+  stopAI();
+  clearLog();
+  aiController={turn_count:0};
+  if(!state.over && state.r!==world.exit[0]) runAIStep();
+  if(!state.over) scheduleAI();
+}
+function stopAI(){ if(aiTimer){clearTimeout(aiTimer); aiTimer=null;} }
+function scheduleAI(){
+  if(state.over) return;
+  const ms=parseInt(document.getElementById("speed").value);
+  aiTimer=setTimeout(()=>{ if(mode==="ai"&&!state.over){ runAIStep(); scheduleAI(); } }, ms);
+}
+function runAIStep(){
+  const act=chooseAction(world,state);
+  // build a human-readable reason
+  let why="";
+  if(act.type==="EXIT") why="standing on exit → leave";
+  else if(act.type==="COLLECT") why="grab artifact on this tile (clear of inbound patrol)";
+  else { const plan=planPath(world,state); if(plan&&plan.length) why=`plan (${plan.length} steps) → first step`; else why="no plan found → wait"; }
+  const fakeLog=[];
+  applyAction(world,state,act.type,fakeLog);
+  const entry=fakeLog.length?fakeLog[0]:{a:act.type.toLowerCase(),t:act.type,why};
+  logLine({a:entry.a,t:act.type+" "+((act.target||"").replace(/-.*/,"")),why:entry.why||why});
+  render(aiPathCells());
+}
+function aiPathCells(){
+  const set=new Set();
+  const plan=planPath(world,state);
+  if(plan) for(let i=0;i<Math.min(plan.length,20);i++){
+    // reconstruct cells from action stream is complex; simply outline the plan's first moves
+    let r=state.r,c=state.c;
+    for(let j=0;j<plan.length;j++){
+      const a=plan[j][0];
+      if(a==="MOVE_NORTH")r--; else if(a==="MOVE_SOUTH")r++; else if(a==="MOVE_WEST")c--; else if(a==="MOVE_EAST")c++;
+      if(j<i) continue;
+      if(r>=0&&r<world.rows&&c>=0&&c<world.cols) set.add(key(r,c));
+    }
+  }
+  return set;
+}
+
+/* ===================== CONTROLS ===================== */
+document.addEventListener("keydown",e=>{
+  if(mode!=="play") return;
+  const k=e.key;
+  const map={ ArrowUp:"MOVE_NORTH", ArrowDown:"MOVE_SOUTH", ArrowLeft:"MOVE_WEST", ArrowRight:"MOVE_EAST", w:"MOVE_NORTH", s:"MOVE_SOUTH", a:"MOVE_WEST", d:"MOVE_EAST" };
+  if(k===" "){ e.preventDefault(); doPlay("WAIT"); return; }
+  if(k==="c"||k==="C"){ doPlay("COLLECT"); return; }
+  if(k==="e"||k==="E"){ doPlay("ENGAGE"); return; }
+  if(k==="x"||k==="X"){ doPlay("EXIT"); return; }
+  if(map[k]){ e.preventDefault(); doPlay(map[k]); }
+});
+function doPlay(act){
+  if(state.over) return;
+  const log=[];
+  applyAction(world,state,act,log);
+  if(log.length) message(log[0].why, log[0].a==="blocked"?"err":(state.win?"ok":""));
+  if(state.win){ message("You reached the exit! 🎉 Score "+state.score, "ok"); }
+  else if(state.over) message("Out of turns. Reach the exit before turn "+world.maxTurns+". Press Reset.", "err");
+  render();
+}
+
+/* ===================== LEVEL SELECTION ===================== */
+function loadLevel(lvl){
+  world=buildWorld(lvl); state=newState();
+  stopAI(); clearLog();
+  renderStory(); render(); message("");
+}
+function newLevel(){
+  // generate a fresh random level using the JS port of the generators
+  const topo=["STRAIGHT_PATH","BENT_PATH","BRANCHING_TREE","GENERAL"][Math.floor(Math.random()*4)];
+  const lvl=randomLevel(topo);
+  loadLevel(lvl);
+}
+
+/* ---- JS port of terrain_generator.py + level_generator.py (for "Random") ---- */
+function randomLevel(topo){
+  // Retry until the generated board is solvable (a plan to the exit exists).
+  // Some boards are legitimately blocked by patrol/enemy placement; we just
+  // skip those so the Random button always gives something you can win.
+  let best=null;
+  for(let attempt=0;attempt<30;attempt++){
+    const lvl=makeRandomLevel(topo);
+    const w=buildWorld(lvl); w.maxTurns=60;
+    world=w; const s=newState();
+    if(planPath(w,s) && planPath(w,s).length) return lvl;
+    best=lvl;
+  }
+  return best;
+}
+function makeRandomLevel(topo){
+  const rows=8, cols=10;
+  const lo=14, hi=18, seed=(Math.random()*1e9)>>>0;
+  const grid=genTerrain(topo,rows,cols,lo,hi,seed);
+  const open=[]; for(let r=0;r<rows;r++)for(let c=0;c<cols;c++) if(grid[r][c]===".") open.push([r,c]);
+  let start,exit;
+  const degree1=[];
+  for(const [r,c] of open){
+    let deg=0; for(const [dr,dc] of [[0,1],[0,-1],[1,0],[-1,0]]) if(open.some(o=>o[0]===r+dr&&o[1]===c+dc)) deg++;
+    if(deg===1) degree1.push([r,c]);
+  }
+  if((topo==="STRAIGHT_PATH"||topo==="BENT_PATH")&&degree1.length>=2){ start=degree1[0]; exit=degree1[1]; }
+  else { start=open[0]; exit=open[Math.min(open.length-1,Math.floor(open.length/2))]; }
+  // place entities
+  const artifactCount=3, enemyCount=2;
+  const used=new Set();
+  const artifacts=[],enemies=[];
+  let pool=open.filter(o=>!(o[0]===start[0]&&o[1]===start[1])&&!(o[0]===exit[0]&&o[1]===exit[1]));
+  for(let i=0;i<artifactCount&&pool.length;i++){
+    const idx=Math.floor(Math.random()*pool.length); const t=pool.splice(idx,1)[0];
+    if(used.has(key(t[0],t[1]))) continue; used.add(key(t[0],t[1]));
+    artifacts.push(["ART-"+(i+1),t[0],t[1],5+Math.floor(Math.random()*16)]);
+  }
+  pool=open.filter(o=>!(o[0]===start[0]&&o[1]===start[1]));
+  for(let i=0;i<enemyCount&&pool.length;i++){
+    const idx=Math.floor(Math.random()*pool.length); const t=pool.splice(idx,1)[0];
+    if(used.has(key(t[0],t[1]))) continue; used.add(key(t[0],t[1]));
+    enemies.push(["ENM-"+(i+1),t[0],t[1],2+Math.floor(Math.random()*5)]);
+  }
+  return {name:"Random "+topo.replace("_"," ").toLowerCase()+" (seed "+seed+")",topology:topo,seed,rows,cols,grid,start,exit,artifacts:artifacts.slice(0,artifactCount),enemies:enemies.slice(0,enemyCount)};
+}
+function genTerrain(topo,rows,cols,lo,hi,seed){
+  const rng=mulberry32(seed);
+  const maxCells=rows*cols;
+  let target=Math.min(hi,maxCells); if(lo!==hi) target=ri(rng,lo,Math.min(hi,maxCells));
+  let opened;
+  if(topo==="STRAIGHT_PATH") opened=straight(rng,rows,cols,target);
+  else if(topo==="BENT_PATH") opened=bent(rng,rows,cols,target);
+  else if(topo==="BRANCHING_TREE"){
+    let attempts=Math.max(40*4,8), ok=false; opened=grow(rng,rows,cols,target,true);
+    for(let i=0;i<attempts;i++){ if(opened.size===target&&hasBranch(opened)){ok=true;break;} opened=grow(rng,rows,cols,target,true); }
+    if(!ok) opened=grow(rng,rows,cols,target,true);
+  } else opened=grow(rng,rows,cols,target);
+  const grid=Array.from({length:rows},()=>Array(cols).fill("#"));
+  for(const k of opened){ const [r,c]=k.split(",").map(Number); grid[r][c]="."; }
+  return grid.map(row=>row.join(""));
+}
+function nb(r,c){return [[r-1,c],[r+1,c],[r,c-1],[r,c+1]]}
+function straight(rng,rows,cols,target){
+  // Guarded port: the real Python raises "empty range" when target exceeds BOTH
+  // dimensions (e.g. rows=6, target=24). Here we fall back to the longer axis so
+  // the Random button never crashes the page. See the Present tab.
+  const set=new Set();
+  if(cols>=target){ const row=rr(rng,rows), sc=rr(rng,0,cols-target+1); for(let c=sc;c<sc+target;c++) set.add(key(row,c)); }
+  else if(rows>=target){ const col=rr(rng,cols), sr=rr(rng,0,rows-target+1); for(let r=sr;r<sr+target;r++) set.add(key(r,col)); }
+  else if(rows>=cols){
+    const t=Math.min(target,rows), col=rr(rng,cols), sr=rr(rng,0,rows-t+1);
+    for(let r=sr;r<sr+t;r++) set.add(key(r,col));
+  } else {
+    const t=Math.min(target,cols), row=rr(rng,rows), sc=rr(rng,0,cols-t+1);
+    for(let c=sc;c<sc+t;c++) set.add(key(row,c));
+  }
+  return set;
+}
+function bent(rng,rows,cols,target){
+  for(let i=0;i<200;i++){
+    const row=rr(rng,rows), col=rr(rng,cols);
+    const vMin=2,vMax=rows-row,hMin=2,hMax=cols-col;
+    const low=Math.max(hMin,target+1-vMax), high=Math.min(hMax,target+1-vMin);
+    if(low<=high){
+      const h=ri(rng,low,high), v=target+1-h, set=new Set();
+      for(let c=col;c<col+h;c++) set.add(key(row,c));
+      for(let r=row+1;r<row+v;r++) set.add(key(r,col));
+      return set;
+    }
+  }
+  return straight(rng,rows,cols,target);
+}
+function grow(rng,rows,cols,target,acyclic){
+  const start=[rr(rng,rows),rr(rng,cols)];
+  const opened=new Set([key(start[0],start[1])]);
+  const frontier=nb(start[0],start[1]).filter(([r,c])=>r>=0&&r<rows&&c>=0&&c<cols);
+  while(opened.size<target&&frontier.length){
+    const idx=rr(rng,frontier.length); const cell=frontier.splice(idx,1)[0];
+    const conn=nb(cell[0],cell[1]).filter(([r,c])=>opened.has(key(r,c)));
+    if(acyclic&&conn.length!==1) continue;
+    if(!conn.length) continue;
+    opened.add(key(cell[0],cell[1]));
+    for(const [r,c] of nb(cell[0],cell[1])) if(r>=0&&r<rows&&c>=0&&c<cols&&!opened.has(key(r,c))&&!frontier.some(f=>f[0]===r&&f[1]===c)) frontier.push([r,c]);
+  }
+  return opened;
+}
+function hasBranch(opened){ for(const k of opened){ const [r,c]=k.split(",").map(Number); let deg=0; for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]) if(opened.has(key(r+a,c+b))) deg++; if(deg>=3) return true; } return false; }
+
+/* ===================== CODE VIEWER ===================== */
+const SOURCES={
+ "character.py":"src-character","artifact.py":"src-artifact","enemy.py":"src-enemy",
+ "terrain_generator.py":"src-terrain","level_generator.py":"src-level","controller.py":"src-controller",
+};
+const BLURB={
+ "character.py":"Who the player is. The simplest possible wrapper: it stores one string and hands it back. Lesson: immutable data classes + validation via the canonical definition.",
+ "artifact.py":"One collectible gem. Stores id, position, value — all read-only. The 'canonical definition' (`ArtifactDefinition`) does the validation, this class just exposes it.",
+ "enemy.py":"One obstacle. Same shape as Artifact: id, position, encounter_penalty. The penalty is the points you lose if you choose to fight it.",
+ "terrain_generator.py":"Builds the maze. Deterministic from (spec, seed): the same seed always gives the same map. Four shapes — straight path, bent path, branching tree, and a general tree.",
+ "level_generator.py":"Puts the world together: picks start/exit, places artifacts and enemies onto open tiles. Depends on a `TerrainGeneratorContract` (a protocol/interface), so it doesn't care which generator you give it.",
+ "controller.py":"The brain. An AI agent that plans a cheapest path to the exit while collecting artifacts, dodging patrols, and deciding when to fight. This is the interesting file.",
+};
+const NOTES={
+ "character.py":[
+  {from:1,to:2,text:"<b>Docstring + import</b>. `CharacterDefinition` is a frozen dataclass from `src.api`. It validates the agent_id (must be a non-empty, trimmed string)."},
+  {from:5,to:8,text:"<b>Class + __init__</b>. Our `Character` wraps a `CharacterDefinition`. The underscore pattern (`_definition`, `_agent_id`) says “private — don't touch from outside.”"},
+  {from:9,to:12,text:"<b>Fail fast</b>. If the id is bad, `CharacterDefinition(agent_id)` raises *immediately*, in the constructor — so it's impossible to create an invalid Character. Comment literal: the AI writer chose to validate up front rather than silently clamp."},
+  {from:13,to:16,text:"<b>@property</b>. Makes `character.agent_id` read like a plain attribute but with no setter — so it's <b>immutable</b> from the outside. This is the whole point of the class."},
+ ],
+ "artifact.py":[
+  {from:1,to:3,text:"<b>Docstring + import</b>. `ArtifactDefinition` (validated value) and `Position` (a frozen row/column dataclass)."},
+  {from:5,to:8,text:"<b>Class</b>. Same wrapper pattern as Character. `__init__` takes id, position, and value. Note `position: Position` — type hints tell you what it expects."},
+  {from:9,to:14,text:"<b>The key line</b>: it builds the canonical `ArtifactDefinition` first, then copies its three fields into private attrs. So all validation (nonempty id, valid Position, value ≥ 0) happens in one place — `ArtifactDefinition` — and bad data fails the constructor."},
+  {from:16,to:26,text:"<b>Three @property getters</b>. Read-only access to id/position/value. No setters, so an artifact can't be mutated after creation. (The game calls these to draw the gem and add its value.)"},
+ ],
+ "enemy.py":[
+  {from:1,to:3,text:"Same pattern as artifact.py: `EnemyDefinition` validates, `Enemy` wraps it read-only."},
+  {from:5,to:14,text:"<b>Encounter penalty</b> is the third field. In the game it's the points you lose for ENGAGEing this enemy. Validated to be ≥ 0."},
+  {from:16,to:26,text:"Three read-only properties, identical shape to Artifact. If you understand `artifact.py`, you understand `enemy.py` — the only new idea is what `encounter_penalty` means in the game."},
+ ],
+ "terrain_generator.py":[
+  {from:1,to:12,text:"<b>The contract.</b> `generate_terrain(spec, seed) -> Terrain` must be <b>deterministic</b>: same inputs, same map, every time. That's why a `random.Random(seed)` is created *inside* (line 86) rather than using global random — the seed is the entire source of randomness."},
+  {from:13,to:18,text:"<b>__init__</b> just tracks last inputs as a record (not used for output). Important: it keeps no random state, so two fresh instances agree on identical input — required by the contract."},
+  {from:20,to:28,text:"<b>Straight path</b>: one single line of floor. If the width fits the target count, choose a random row and start column; else use a vertical line instead."},
+  {from:30,to:49,text:"<b>Bent path</b>: an L-shape. It picks a random corner, then picks horizontal length h and vertical length v such that h + v − 1 == target. If a valid split exists (low ≤ high), it returns. After 200 tries it falls back to straight."},
+  {from:51,to:72,text:"<b>Grow a tree</b>: classic random-maze growth. Start at a random cell; keep adding a random *frontier* (neighbor) cell that touches the region. If `acyclic` is set, a new cell must touch exactly one existing cell — that guarantees no loops (a real tree)."},
+  {from:74,to:80,text:"<b>has_branch</b>: true if any cell has ≥3 open neighbors. Used to force branching trees to actually branch."},
+  {from:82,to:113,text:"<b>generate_terrain</b>: the entry point. Pick target open-tile count (between min and max), dispatch by topology, then paint a `#`/`.` grid and wrap it in a `Terrain`. Everything reads from the seeded `rng`, so the result is reproducible."},
+ ],
+ "level_generator.py":[
+  {from:1,to:7,text:"Imports the definitions and `TerrainTopology`. Note it imports the *contract* type (`TerrainGeneratorContract`) for the type hint."},
+  {from:13,to:14,text:"<b>Dependency injection</b>: the LevelGenerator receives a `TerrainGeneratorContract` (any object with `generate_terrain`). It doesn't make its own — that keeps the two components decoupled and testable."},
+  {from:16,to:33,text:"<b>Helpers</b> over your tile list. `_degree_one` returns tiles with exactly one open neighbor — i.e. dead-ends (good start/exit candidates)."},
+  {from:35,to:49,text:"<b>Pick start & exit</b>. For a straight/bent path it uses two dead-end tiles. Otherwise: start at the first open tile, then pick an exit whose Manhattan distance falls inside the requested route bounds."},
+  {from:51,to:90,text:"<b>Place artifacts & enemies</b>. It shuffles the tile pool, then pops tiles one by one (so placement is random but deterministic given the seed). Blocked tiles are kept off the endpoints (unless allowed). Value/penalty are rolled within the spec's min–max range. <span class='em'>This is the function that decides exactly where your 💎 and 👾 appear.</span>"},
+  {from:92,to:108,text:"<b>generate_level</b>: the public entry. Build terrain → open tiles → endpoints → entities → assemble the immutable `LevelDefinition`. That object is what `controller.py` reads as `state.level`."},
+ ],
+ "controller.py":[
+  {from:1,to:4,text:"<b>Imports.</b> `heapq` = a heap (priority queue), used for Dijkstra's shortest-path algorithm. `WorldAction`/`WorldActionType`/`WorldSnapshot` let the controller speak the game's action language."},
+  {from:7,to:11,text:"<b>The controller class</b>. One instance per run. `turn_count` just counts calls — it's not really used for planning, but it shows the 'one object per run' lifecycle."},
+  {from:13,to:18,text:"<b>_patrol_position</b> — the single most important idea. A patrol moves once per accepted action, so its position at any future turn is fully predictable: `(initial_phase + turn) % len(positions)` is just cycling through its schedule. That means the AI can plan *around future patrol positions* right now."},
+  {from:20,to:21,text:"<b>_patrol_cells</b>: list of where every patrol will be at a given turn."},
+  {from:23,to:31,text:"<b>_static_enemies</b>: enemies that are (a) not yet defeated and (b) not on a patrol. Patrol enemies can't be fought — only timed around. Static enemies are the ones you may ENGAGE."},
+  {from:33,to:43,text:"<b>_plan</b>: the whole brain. It searches a state space where a state is <code>(position, turn, set-of-defeated-enemies)</code>. Cost = number of actions + encounter penalties. It returns the lowest-cost sequence of actions, or None if the exit is unreachable."},
+  {from:44,to:53,text:"<b>Setup.</b> `limit` = latest acceptable turn. `start_defeated` is a `frozenset` (immutable, hashable — so it can be a dictionary key). `dist`/`previous` are the classic Dijkstra tables; `pending` is the priority queue; `moves` lists the four directions."},
+  {from:54,to:63,text:"<b>Main loop.</b> Pop the cheapest state off the heap (Dijkstra always expands cheapest-first). If it's the exit → we found the goal. If we're out of turns, prune this branch."},
+  {from:64,to:83,text:"<b>Expanding a move.</b> For each direction: skip walls, skip tiles occupied by a patrol *now or after this move* (that's the anti-collision rule), and skip undefeated enemy cells (you can't just walk onto one). Otherwise record `cost+1` and push the neighbor state."},
+  {from:84,to:102,text:"<b>Expanding a 'stay'.</b> Only if no patrol is here now or next turn. Then: if a static enemy is adjacent, add a transition that ENGAGEs it, costing `1 + penalty`. If WAIT is allowed, add a wait transition costing 1. This is how the AI decides between fighting and waiting."},
+  {from:103,to:111,text:"<b>Reconstruct the path</b>. Walk `previous` back from the goal to the start, collecting actions, then reverse — giving the planned action sequence."},
+  {from:113,to:130,text:"<b>choose_action</b>: the public interface the game calls every turn. Priority: (1) standing on exit → EXIT. (2) standing on an uncollected artifact with no inbound patrol → COLLECT. (3) otherwise follow the first step of the plan. (4) fallback → WAIT."},
+ ],
+};
+
+function renderCode(){
+  const el=document.getElementById("t-code");
+  let html="";
+  for(const [f,key] of Object.entries(SOURCES)){
+    const src=document.getElementById(key).textContent.replace(/\n$/,"").split("\n");
+    const notes=NOTES[f]||[];
+    html+=`<div class="section"><h3><span class="f">${f}</span></h3><div class="blurb">${BLURB[f]}</div>`;
+    html+=`<pre class="code">`;
+    const noteByEnd={}; for(const n of notes) noteByEnd[n.to]=n;
+    src.forEach((line,i)=>{
+      const num=i+1;
+      html+=`<span class="codeln">${String(num).padStart(2,"0")}</span> ${line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}\n`;
+      if(noteByEnd[num]) html+=`</pre><div class="note">${noteByEnd[num].text}</div><pre class="code">`;
+    });
+    html+=`</pre></div>`;
+  }
+  el.innerHTML=html;
+}
+
+/* ===================== GUIDE (presentation) ===================== */
+const GUIDE = `
+<h4>Why this is a game</h4>
+<p>Everything in ${"src/student/"} is the “brain and world-builders” of an adventure game. The workbench runs your code against hidden test levels; this page shows you the same ideas visibly.</p>
+
+<h4>The 6 components — what to say about each</h4>
+<table class="map">
+<tr><th>File</th><th>One-line pitch</th><th>Key concept</th></tr>
+<tr><td class="f">character.py</td><td>Who you are.</td><td>Read-only property over a validated definition.</td></tr>
+<tr><td class="f">artifact.py</td><td>A collectible gem.</td><td>Same wrapper pattern; value ≥ 0.</td></tr>
+<tr><td class="f">enemy.py</td><td>A blocker you can fight.</td><td>encounter_penalty = cost to engage.</td></tr>
+<tr><td class="f">terrain_generator.py</td><td>Builds the maze from a seed.</td><td>Deterministic generation; 4 shapes.</td></tr>
+<tr><td class="f">level_generator.py</td><td>Picks start/exit + places items.</td><td>Dependency injection via a contract.</td></tr>
+<tr><td class="f">controller.py</td><td>The AI player.</td><td>Dijkstra over (position, turn, defeated).</td></tr>
+</table>
+
+<h4>How the AI actually thinks (the impressive part)</h4>
+<p>Every turn, the controller rebuilds a complete plan using <b>Dijkstra's algorithm</b> over a state space of <code>(row, col, turn, defeated-set)</code>. Three insights make it work:</p>
+<ul>
+<li><b>Patrols are predictable.</b> Because each accepted action advances the clock by exactly one, a patrol's location at any future turn is known in advance — so the AI plans around patrol *future* positions, not just the current one.</li>
+<li><b>Enemies are a choice.</b> Walking onto a static enemy is forbidden until you ENGAGE it from an adjacent tile (cost = 1 action + penalty). The planner weighs fighting vs. detouring automatically.</li>
+<li><b>Cost = actions + penalties.</b> That's the same number the workbench scores, so a lowest-cost plan is a highest-score plan.</li>
+</ul>
+
+<h4>One real bug I found (good to be able to point out)</h4>
+<p class="em">The AI-written <code>terrain_generator.py</code> crashes on a straight path when the target tile count exceeds both board dimensions: <code>rng.randrange(0, rows - target + 1)</code> gets an empty range (e.g. 6 rows, target 24 → <code>randrange(0, -17)</code>). In my run, this raised <code>ValueError: empty range in randrange</code>. The host hides this because real straight-path specs always fit one axis — but it's a latent edge case. Mentioning it shows you actually read the code.</p>
+
+<h4>If asked “how did you satisfy the framework?”</h4>
+<ul>
+<li>The framework defines <b>contracts</b> (<code>CharacterContract</code>, <code>TerrainGeneratorContract</code>, <code>AgentControllerContract</code>…) in <code>src/api/_contracts.py</code>. My classes satisfy them structurally — same method/property signatures.</li>
+<li>All values are <b>immutable and validated</b> through the canonical definitions (<code>CharacterDefinition</code>, <code>ArtifactDefinition</code>…) in <code>src/api/_values.py</code>, so bad data fails fast at construction.</li>
+<li>The controller is <b>stateless per run</b> and reads only the provided <code>WorldSnapshot</code> — no hidden state, no cheating.</li>
+</ul>
+
+<h4>How the page maps to the code</h4>
+<ul>
+<li>The map grid = output of <code>terrain_generator.py</code> (real captured output).</li>
+<li>Start/exit/gems/monsters = output of <code>level_generator.py</code> (real captured output).</li>
+<li>Patrols = “instructor” schedules (the student code doesn't create them — they're part of the level).</li>
+<li><b>Watch AI</b> runs a 1:1 port of <code>controller.py</code>'s algorithm.</li>
+</ul>
+`;
+
+/* ===================== WIRING ===================== */
+function init(){
+  // level select
+  const sel=document.getElementById("levelSel");
+  LEVELS.forEach((l,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=l.name; sel.appendChild(o); });
+  sel.onchange=()=>{ stopAI(); loadLevel(LEVELS[sel.value]); };
+  document.getElementById("btnRandom").onclick=()=>{ stopAI(); if(mode!=="play") setMode("play"); newLevel(); };
+  document.getElementById("btnReset").onclick=()=>{ stopAI(); state=newState(); clearLog(); render(); message(""); };
+  document.getElementById("btnStep").onclick=()=>{ if(mode==="ai") runAIStep(); else doPlay("WAIT"); };
+  document.getElementById("btnRun").onclick=()=>{ if(mode==="play") setMode("ai"); else { stopAI(); startAI(); } };
+  document.getElementById("btnPlay").onclick=()=>setMode("play");
+  document.getElementById("btnAI").onclick=()=>setMode("ai");
+
+  // tabs
+  const tabs=document.querySelectorAll(".tab");
+  tabs.forEach(t=>t.onclick=()=>{
+    tabs.forEach(x=>x.classList.remove("on")); t.classList.add("on");
+    document.querySelectorAll(".tpanel").forEach(p=>p.classList.remove("on"));
+    document.getElementById("t-"+t.dataset.t).classList.add("on");
+  });
+
+  renderCode();
+  document.getElementById("guideText").innerHTML=GUIDE;
+  loadLevel(LEVELS[0]);
+  renderStory();
+}
+init();
+</script>
+</body>
+</html>
