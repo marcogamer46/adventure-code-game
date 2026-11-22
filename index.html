@@ -117,11 +117,11 @@
   #boardHost::after{content:""; position:absolute; inset:0; pointer-events:none; z-index:2; background:radial-gradient(closest-side at var(--ax,50%) var(--ay,50%), transparent 55%, color-mix(in srgb, #000 35%, transparent)); opacity:.5}
   #board{display:grid; gap:2px; padding:8px; background:var(--panel2); border-radius:10px; border:1px solid var(--line); margin:0 auto; min-width:0}
   .cell{width:100%; aspect-ratio:1/1; border-radius:4px; display:flex; align-items:center; justify-content:center; position:relative; line-height:1; min-width:0}
-  .cell.wall{background:linear-gradient(135deg, color-mix(in srgb, #fff 10%, var(--wall)), var(--wall) 55%, color-mix(in srgb, #000 22%, var(--wall))); box-shadow:var(--inset); position:relative}
-  .cell.wall::after{content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; background:repeating-linear-gradient(90deg, transparent 0 12px, rgba(0,0,0,.18) 12px 14px); opacity:.45}
-  .cell.floor{background-color:var(--floor); box-shadow:var(--inset), inset 0 0 0 1px color-mix(in srgb, var(--line) 40%, transparent); background-image:repeating-linear-gradient(0deg, color-mix(in srgb, var(--line) 12%, transparent) 0 1px, transparent 1px 100%), repeating-linear-gradient(90deg, color-mix(in srgb, var(--line) 12%, transparent) 0 1px, transparent 1px 100%)}
-  .cell.floor.alt{background-color:var(--floor2); background-image:repeating-linear-gradient(0deg, color-mix(in srgb, var(--line) 12%, transparent) 0 1px, transparent 1px 100%), repeating-linear-gradient(90deg, color-mix(in srgb, var(--line) 12%, transparent) 0 1px, transparent 1px 100%)}
-  .cell .ico{width:84%; height:84%; display:flex; align-items:center; justify-content:center; color:var(--text)}
+  .cell.wall{background:linear-gradient(135deg, color-mix(in srgb, #000 32%, var(--wall)), var(--wall) 58%, color-mix(in srgb, #000 46%, var(--wall))); position:relative}
+  .cell.wall::after{content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; background:repeating-linear-gradient(90deg, transparent 0 12px, rgba(0,0,0,.2) 12px 14px); opacity:.2}
+  .cell.floor{background-color:color-mix(in srgb, var(--floor) 88%, #fff); box-shadow:var(--inset), inset 0 0 0 1px color-mix(in srgb, var(--line) 38%, transparent); background-image:repeating-linear-gradient(0deg, color-mix(in srgb, var(--line) 11%, transparent) 0 1px, transparent 1px 100%), repeating-linear-gradient(90deg, color-mix(in srgb, var(--line) 11%, transparent) 0 1px, transparent 1px 100%)}
+  .cell.floor.alt{background-color:color-mix(in srgb, var(--floor2) 86%, #fff); background-image:repeating-linear-gradient(0deg, color-mix(in srgb, var(--line) 11%, transparent) 0 1px, transparent 1px 100%), repeating-linear-gradient(90deg, color-mix(in srgb, var(--line) 11%, transparent) 0 1px, transparent 1px 100%)}
+  .cell .ico{width:84%; height:84%; display:flex; align-items:center; justify-content:center; color:var(--text); position:relative; z-index:1}
   .cell .ico svg{width:100%; height:100%; display:block}
   /* sprite shading helpers (referenced by embedded symbol <style> vars) */
   #board .ico svg, .legend svg{
@@ -134,7 +134,9 @@
   .cell .badge{position:absolute; bottom:0; right:0; font-size:clamp(11px, calc(var(--cellsize,36px)*0.32), 18px); background:color-mix(in srgb, #000 78%, transparent); color:#fff; padding:0 4px; border-radius:6px; font-weight:800; line-height:1.3; box-shadow:0 0 0 1px color-mix(in srgb, var(--bg) 40%, transparent)}
   .cell.dim{opacity:.35}
   .cell.hl{outline:2px solid var(--accent2); outline-offset:-1px}
-  .cell.path{background:color-mix(in srgb, var(--accent2) 16%, var(--floor))}
+  .cell.path{background:transparent; position:relative}
+  .cell.path::before{content:""; position:absolute; left:50%; top:80%; transform:translateX(-50%); width:5px; height:5px; border-radius:50%; background:var(--accent2); z-index:0}
+  .cell.path::after{content:""; position:absolute; left:10%; right:10%; bottom:14%; height:2px; border-radius:99px; background:repeating-linear-gradient(90deg, var(--accent2) 0 6px, transparent 6px 11px); z-index:0; pointer-events:none}
   .cell.start{background:color-mix(in srgb, var(--start) 26%, var(--floor)); box-shadow:var(--glow-start)}
   .cell.exit{background:color-mix(in srgb, var(--exit) 24%, var(--floor)); box-shadow:var(--glow-exit)}
   .cell.explored{background:color-mix(in srgb, var(--accent) 9%, var(--floor))}
@@ -327,6 +329,45 @@
   .refcard ul{margin:2px 0 0 16px}
   .refcard li{margin-bottom:2px}
 
+  /* ============ BOARD PAN / CAMERA ============ */
+  #boardHost{overflow:hidden}
+  #boardpan{position:relative; will-change:transform; transition:transform .25s ease; transform-origin:0 0}
+  #boardpan .trailLayer{position:absolute; inset:8px; pointer-events:none}
+
+  /* ============ CODE VIEWER ============ */
+  .cv-wrap{display:flex; flex-direction:column; gap:8px}
+  .cv-head{display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-family:ui-monospace,monospace; font-size:12.5px}
+  .cv-file{background:var(--panel2); border:1px solid var(--accent2); color:var(--accent2); border-radius:99px; padding:2px 9px; font-weight:650}
+  .cv-fn{color:var(--text); font-weight:800}
+  .cv-owner{color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--panel)); border-radius:99px; padding:2px 8px}
+  .cv-mode{color:var(--dim); text-transform:uppercase; font-size:11px; letter-spacing:.4px}
+  #cvClose{margin-left:auto; font-size:14px; line-height:1; width:26px; height:26px; min-height:26px; padding:0}
+  .cv-scroll{position:relative; max-height:300px; overflow:auto; background:var(--bg); border:1px solid var(--line); border-radius:10px; box-shadow:var(--inset)}
+  .cv-scroll::after{content:""; position:sticky; bottom:0; display:block; height:16px; pointer-events:none; background:linear-gradient(transparent, var(--bg))}
+  .cv-code{margin:0; padding:8px 6px 20px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:14px; line-height:1.5; color:var(--text); white-space:pre-wrap; overflow-wrap:anywhere; word-break:break-word}
+  .cv-line{display:block; padding:0 6px; border-left:3px solid transparent; transition:background .15s, opacity .15s; border-radius:2px; white-space:pre-wrap}
+  .cv-gutter{display:inline-block; width:2.2em; text-align:right; color:var(--dim); user-select:none; font-size:12px}
+  .cv-arrow{display:inline-block; width:1em; color:var(--accent); font-weight:800; visibility:hidden; text-align:center}
+  .cv-codef{white-space:pre-wrap}
+  .cv-ann{color:color-mix(in srgb, var(--muted) 78%, var(--bg)); font-style:italic; margin-left:1em; white-space:pre-wrap}
+  .cv-line.exec{background:color-mix(in srgb, var(--accent) 16%, var(--bg))}
+  .cv-line.exec .cv-arrow{visibility:visible}
+  .cv-line.done .cv-codef{opacity:.5}
+  .cv-line.done .cv-gutter{color:var(--good)}
+  .tok-kw{color:#c792ea} .tok-str{color:#9ece6a; } .tok-com{color:#7f8c9c; font-style:italic} .tok-fn{color:#82aaff} .tok-num{color:#ff9e64} .tok-dec{color:#56b6c2} .tok-op{color:#89ddff}
+  .theme-light .tok-kw{color:#6d28d9} .theme-light .tok-str{color:#15803d} .theme-light .tok-com{color:#64748b} .theme-light .tok-fn{color:#1d4ed8} .theme-light .tok-num{color:#b45309} .theme-light .tok-dec{color:#0e7490} .theme-light .tok-op{color:#0e7490}
+  .cv-vars{display:grid; grid-template-columns:repeat(auto-fit,minmax(136px,1fr)); gap:4px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:8px; box-shadow:var(--inset)}
+  .cv-var{font-size:12px; color:var(--muted); font-family:ui-monospace,monospace; display:flex; flex-direction:column; gap:1px; border-radius:6px; padding:2px 5px}
+  .cv-var b{font-size:13px; color:var(--text); word-break:break-all; font-weight:600}
+  .cv-var .lbl{text-transform:uppercase; font-size:10px; letter-spacing:.4px; color:var(--dim)}
+  .cv-var.changed{background:color-mix(in srgb, var(--accent2) 10%, var(--panel2)); box-shadow:inset 0 0 0 1px var(--accent2)}
+  .cv-controls{display:flex; gap:6px; align-items:center; flex-wrap:wrap}
+  .btn-small{min-height:30px; padding:4px 10px; font-size:13px}
+  .cv-scrub{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); margin-left:auto}
+  .cv-scrub input[type=range]{width:96px; accent-color:var(--accent)}
+  .cv-history summary{cursor:pointer; font-size:12.5px; color:var(--muted); font-weight:600}
+  .cv-history .call-feed{max-height:180px}
+
   /* ============ ANIMATIONS ============ */
   @keyframes pop{0%{transform:scale(.35); opacity:0}70%{transform:scale(1.18); opacity:1}100%{transform:scale(1); opacity:1}}
   @keyframes slidein{from{transform:translate(var(--dx), var(--dy)); opacity:.25}to{transform:translate(0,0); opacity:1}}
@@ -396,7 +437,7 @@
 
   /* ---- watch AI path + frontier ---- */
   @keyframes dashFlow{to{background-position:0 0}}
-  #board.ai .cell.path{background-image:linear-gradient(90deg, var(--accent2) 0 55%, transparent 55%); background-size:220% 100%; animation:dashFlow .6s linear infinite}
+  #board.ai .cell.path::after{animation:dashFlow .5s linear infinite; background-image:repeating-linear-gradient(90deg, var(--accent2) 0 6px, transparent 6px 11px); background-size:200% 100%}
   @keyframes frontierRipple{0%{box-shadow:0 0 0 0 var(--accent2); opacity:1}100%{box-shadow:0 0 0 8px transparent; opacity:0}}
   #board.ai .cell.explored{animation:frontierRipple .7s ease-out}
 
@@ -451,6 +492,7 @@
   .call-entry .ce-detail{color:var(--muted); font-family:ui-sans-serif,system-ui,sans-serif; font-size:11.5px}
   .call-entry .ce-detail b{color:var(--accent)}
   .call-entry .ce-turn{float:right; color:var(--dim); font-size:11px; background:var(--panel2); border-radius:6px; padding:0 6px}
+  .call-entry .ce-count{color:var(--accent); font-weight:700; font-size:11px; margin-left:6px; background:color-mix(in srgb, var(--accent2) 14%, transparent); border-radius:6px; padding:0 6px}
   .call-entry .ce-py{margin-top:6px; border-top:1px solid var(--line); padding-top:6px; display:none}
   .call-entry.show-py .ce-py{display:block}
   .call-entry .ce-py pre{font-size:12px; line-height:1.5; background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:6px 8px; overflow-x:auto; max-height:180px; overflow-y:auto}
@@ -633,7 +675,7 @@
 
   <div class="layout" id="layout">
     <div class="card boardcol">
-      <div class="boardhead"><h2>Map</h2><button id="btnWide" class="btn icon" title="Toggle full-width right panel" aria-label="Toggle full width">⤢</button></div>
+      <div class="boardhead"><h2>Map</h2><button id="btnFit" class="btn icon" title="Fit whole map / follow agent" aria-label="Toggle fit map">⌗</button><button id="btnWide" class="btn icon" title="Toggle full-width right panel" aria-label="Toggle full width">⤢</button></div>
       <div class="legend">
         <span><span class="sw"><svg viewBox="0 0 24 24"><use href="#i-start"/></svg></span> start</span>
         <span><span class="sw"><svg viewBox="0 0 24 24"><use href="#i-exit"/></svg></span> exit</span>
@@ -643,8 +685,10 @@
         <span><span class="sw"><svg viewBox="0 0 24 24"><use href="#i-agent"/></svg></span> you</span>
       </div>
       <div id="boardHost">
-        <div id="board"></div>
-        <div class="trailLayer" id="trailLayer"></div>
+        <div id="boardpan">
+          <div id="board"></div>
+          <div class="trailLayer" id="trailLayer"></div>
+        </div>
       </div>
       <div class="hud" id="hud"></div>
       <div class="deadlinewrap" id="deadlinewrap">
@@ -676,7 +720,6 @@
       <div class="card activity-card" id="activityStrip">
         <div class="act-head">
           <h2>Code activity</h2>
-          <label class="act-toggle"><input type="checkbox" id="actShowPy"> Show Python line ranges</label>
         </div>
         <div class="honesty" id="actHonesty">JS port of the Python files. The page runs a JavaScript translation, not your .py at runtime.</div>
         <div class="file-chips" id="actChips" role="tablist">
@@ -688,7 +731,6 @@
           <button class="filechip" data-file="controller.py" role="tab" data-owner="Batoy">controller.py</button>
         </div>
         <div class="file-panel" id="actPanel" hidden></div>
-        <div class="call-feed" id="actFeed"></div>
       </div>
     </div>
 
@@ -723,14 +765,31 @@
       <div class="tpanel" id="t-ref"><div id="ref"></div></div>
       <div class="tpanel" id="t-log"><div id="log"></div></div>
       <div class="tpanel" id="t-live">
-        <div class="statechip" id="liveState"></div>
-        <div id="liveReason" class="chip" style="margin-bottom:6px; width:100%"></div>
-        <div class="snipLabel">Now executing</div>
-        <pre class="code snippet" id="liveSnippet"></pre>
-        <details class="fulldetails">
-          <summary>Full controller.py</summary>
-          <pre class="code" id="liveCode"></pre>
-        </details>
+        <div class="cv-wrap">
+          <div class="cv-head">
+            <span class="cv-file" id="cvFile">controller.py</span>
+            <span class="cv-fn" id="cvFn">_plan</span>
+            <span class="cv-owner" id="cvOwner">Batoy</span>
+            <span class="cv-mode" id="cvMode">AI</span>
+            <button class="btn btn-small" id="cvClose" title="Close code viewer">×</button>
+          </div>
+          <div class="cv-vars" id="cvVars"></div>
+          <div class="cv-scroll" id="cvScroll">
+            <pre class="cv-code" id="cvCode"></pre>
+          </div>
+          <div class="cv-controls">
+            <button class="btn btn-small" id="cvStepLine">Step line</button>
+            <button class="btn btn-small" id="cvRunFn">Run to next fn</button>
+            <label class="cv-scrub">scrub
+              <input type="range" id="cvScrub" min="0" max="0" value="0">
+              <output id="cvScrubVal" for="cvScrub">0/0</output>
+            </label>
+          </div>
+          <details class="cv-history" id="cvHistoryWrap">
+            <summary>Call history</summary>
+            <div class="call-feed" id="actFeed"></div>
+          </details>
+        </div>
       </div>
       <div class="tpanel" id="t-code"></div>
       <div class="tpanel" id="t-present"><div id="presentText"></div></div>
@@ -1342,6 +1401,7 @@ function applyAction(w,s,act,log){
       s.collected.add(a.id); s.score+=a.value; advanceTurn(s,log,act,"collected "+a.id+" +"+a.value);
       pendingFX.push({type:"collect", r:s.r, c:s.c, val:a.value});
       actRecord({file:"artifact.py", pyFn:"value", jsFn:"applyAction", detail:"read value from Artifact wrapper: "+a.id+" +"+a.value});
+      cvProp("artifact.py","valueprop","return self._value — "+a.id+" supplies value +"+a.value, { "artifact":a.id, "value":"+"+a.value });
     } else { (log||[]).push({a:"blocked",t:act,why:"nothing to collect here (or a patrol arrives)"}); }
     return;
   }
@@ -1352,7 +1412,8 @@ function applyAction(w,s,act,log){
     }
     if(target){ s.defeated.add(target.id); s.score-=target.penalty; s.penalties+=target.penalty; advanceTurn(s,log,act,"defeated "+target.id+" -"+target.penalty+" pts");
       pendingFX.push({type:"engage", r:target.r, c:target.c, pen:target.penalty});
-      actRecord({file:"enemy.py", pyFn:"encounter_penalty", jsFn:"applyAction", detail:"read penalty from Enemy wrapper: "+target.id+" −"+target.penalty}); }
+      actRecord({file:"enemy.py", pyFn:"encounter_penalty", jsFn:"applyAction", detail:"read penalty from Enemy wrapper: "+target.id+" −"+target.penalty});
+      cvProp("enemy.py","penaltyprop","return self._encounter_penalty — "+target.id+" supplies penalty −"+target.penalty, { "enemy":target.id, "penalty":"−"+target.penalty }); }
     else { (log||[]).push({a:"blocked",t:act,why:"no adjacent enemy to engage"}); }
     return;
   }
@@ -1544,6 +1605,27 @@ function render(pathCells){
   }
   renderHud(); renderDeadline(); renderGhosts();
   renderFX();
+  applyCamera();
+}
+let mapFit=!!tryRead("adv_fit");
+function applyCamera(){
+  const pan=document.getElementById("boardpan"), host=document.getElementById("boardHost");
+  if(!pan||!host) return;
+  const baseCell=parseFloat(boardEl.style.getPropertyValue("--cellsize"))||32;
+  const minCell=28;
+  const scale=mapFit?1:Math.max(1,minCell/baseCell);
+  const panW=boardEl.offsetWidth, panH=boardEl.offsetHeight;
+  const hw=host.clientWidth, hh=host.clientHeight;
+  let tx=0, ty=0;
+  if(!mapFit && scale>1.001 && panW>0 && hw>0){
+    const cx=(state.c+0.5)*baseCell, cy=(state.r+0.5)*baseCell;
+    tx=hw/2 - cx*scale; ty=hh/2 - cy*scale;
+    const sw=panW*scale, sh=panH*scale;
+    tx=(sw<=hw)?(hw-sw)/2:Math.min(0,Math.max(hw-sw,tx));
+    ty=(sh<=hh)?(hh-sh)/2:Math.min(0,Math.max(hh-sh,ty));
+  }
+  pan.style.transform=`translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${scale})`;
+  pan.dataset.scale=scale.toFixed(3);
 }
 function renderFX(){
   for(const fx of pendingFX){
@@ -1627,7 +1709,7 @@ function setMode(m){
   document.getElementById("btnAI").classList.toggle("on",mode==="ai");
   document.getElementById("btnRun").innerHTML = (mode==="ai"?"Run AI ":"Run ")+'<svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg>';
   stopAI();
-  if(mode==="ai"){ startAI(); } else { render(); }
+  if(mode==="ai"){ setTab("live"); startAI(); } else { render(); cvIdle(); }
 }
 
 function delayMs(){ return parseInt(document.getElementById("speed").value)||400; }
@@ -1635,36 +1717,10 @@ function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
 /* ---- live code view ---- */
 let liveRange=null;
-function buildLiveCode(){
-  const src=document.getElementById("src-controller").textContent.replace(/\n$/,"").split("\n");
-  let h="";
-  src.forEach((line,i)=>{
-    h+=`<span class="lc" data-n="${i+1}"><span class="codeln">${String(i+1).padStart(2,"0")}</span> ${line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</span>\n`;
-  });
-  document.getElementById("liveCode").innerHTML=h;
-}
+function buildLiveCode(){ /* live snippet replaced by the code viewer */ }
 function setLive(a,label){
   liveRange=a;
-  if(label!==undefined) document.getElementById("liveReason").innerHTML=svgUse("i-bolt")+" "+escHtml(label);
-  const lines=Array.from(document.querySelectorAll("#liveCode .lc"));
-  lines.forEach(el=>el.classList.remove("hl"));
-  const snipEl=document.getElementById("liveSnippet");
-  if(!a){ snipEl.innerHTML=""; return; }
-  let first=null;
-  lines.forEach(el=>{
-    const n=+el.dataset.n;
-    if(n>=a[0]&&n<=a[1]){ el.classList.add("hl"); if(!first) first=el; }
-  });
-  if(first){ const pre=document.getElementById("liveCode"); pre.scrollTop=Math.max(0,first.offsetTop-44); }
-  // big "now executing" snippet: just the live range
-  const src=document.getElementById("src-controller").textContent.replace(/\n$/,"").split("\n");
-  let h="";
-  for(let n=a[0]; n<=a[1]; n++){
-    const line=src[n-1];
-    if(line===undefined) continue;
-    h+=`<span class="lc" data-n="${n}"><span class="codeln">${String(n).padStart(2,"0")}</span> ${line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</span>\n`;
-  }
-  snipEl.innerHTML=h;
+  if(label!==undefined){ const r=document.getElementById("liveReason"); if(r) r.innerHTML=svgUse("i-bolt")+" "+escHtml(label); }
 }
 const LIVE_PHASES={
   exit:[116,118], collect:[119,125], planSetup:[44,53],
@@ -1768,6 +1824,7 @@ async function runAIStep(){
     else setLive(LIVE_PHASES.wait,"staying put: WAIT one turn");
     await sleep(D);
   }
+  cvTurn(act.type, plan);
   const log=[];
   applyAction(world,state,act.type,log);
   const entry=log.length?log[0]:{a:act.type.toLowerCase(),t:act.type,why:""};
@@ -1816,6 +1873,7 @@ function doPlay(act){
   else if(act.startsWith("MOVE")) setLive(LIVE_PHASES.move,"you: move — the same wall / patrol / enemy checks the AI uses");
   else if(act==="ENGAGE") setLive(LIVE_PHASES.engage,"you: ENGAGE an adjacent enemy");
   else setLive(LIVE_PHASES.wait,"you: WAIT one turn (time the patrols)");
+  if(act!=="COLLECT" && act!=="ENGAGE") cvIdle();
   const log=[];
   applyAction(world,state,act,log);
   if(log.length) message(log[0].why, log[0].a==="blocked"?"err":(state.win?"ok":""));
@@ -1842,6 +1900,7 @@ function loadLevel(lvl){
   const blEl=document.getElementById("board");
   if(blEl){ blEl.classList.add("loading"); setTimeout(()=>blEl.classList.remove("loading"),700); }
   renderStory(); render(); setLiveState(); message("");
+  cvLoad();
 }
 function newLevel(){
   // generate a fresh random level using the JS port of the generators
@@ -2449,8 +2508,14 @@ function actPulse(file){
 }
 function actAddEntry(e){
   const feed=document.getElementById("actFeed"); if(!feed) return;
+  const head=feed.firstElementChild;
+  if(head && head.dataset.file===e.file && head.dataset.fn===(e.pyFn||"") && head.dataset.det===(e.detail||"")){
+    const c=head.querySelector(".ce-count");
+    if(c){ head.dataset.n=+head.dataset.n+1; c.textContent="x"+head.dataset.n; }
+    return head;
+  }
   const el=document.createElement("div");
-  el.className="call-entry"; el.dataset.file=e.file;
+  el.className="call-entry"; el.dataset.file=e.file; el.dataset.fn=e.pyFn||""; el.dataset.det=e.detail||""; el.dataset.n=1;
   const label=ACT_FN_LABEL[e.pyFn]||e.pyFn;
   const d=`<div class="ce-main"><span class="f">${escHtml(e.file)}</span> &gt; <span class="fn">${escHtml(label)}</span> <span class="ce-turn">T${e.turn}</span></div>`;
   const det=e.detail?`<div class="ce-detail">${e.detail}</div>`:"";
@@ -2473,19 +2538,6 @@ function actShowCodeRange(file, lo, hi){
     const n=+el.dataset.n||0; el.classList.toggle("hl", n>=lo && n<=hi); });
   const first=sec.querySelector(".cl.hl"); if(first) first.scrollIntoView({behavior:"smooth", block:"center"});
 }
-function actTogglePy(on){
-  document.querySelectorAll(".call-entry").forEach((el,i)=>{
-    if(!on){ el.classList.remove("show-py"); el.querySelector(".ce-py")?.remove(); return; }
-    const e=ACT_FEED[i]; if(!e) return;
-    const [lo,hi]=ACT_RANGES[e.file][e.pyFn]||[1,1];
-    const src=document.getElementById(ACT_SRC[e.file]).textContent.replace(/\n$/,"").split("\n");
-    let h=""; for(let n=lo;n<=hi;n++){ const line=src[n-1]; if(line===undefined) continue;
-      h+=`<span class="cl"><span class="codeln">${String(n).padStart(2,"0")}</span> ${escHtml(line)}</span>\n`; }
-    let py=el.querySelector(".ce-py"); if(!py){ py=document.createElement("div"); py.className="ce-py"; el.appendChild(py); }
-    py.innerHTML=`<pre>${h}</pre>`; el.classList.add("show-py");
-  });
-}
-document.getElementById("actShowPy").addEventListener("change",e=>actTogglePy(e.target.checked));
 function actShowPanel(file){
   const panel=document.getElementById("actPanel"); if(!panel) return;
   document.querySelectorAll(".filechip").forEach(c=>c.classList.toggle("on", c.dataset.file===file));
@@ -2516,6 +2568,252 @@ function actReset(){
   const panel=document.getElementById("actPanel"); if(panel){ panel.hidden=true; panel.innerHTML=""; }
 }
 
+/* ===================== CODE VIEWER (pass 4) ===================== */
+const TEAM_OWNER={"character.py":"Sanchez","artifact.py":"Oepena","enemy.py":"Oepena","terrain_generator.py":"Gonzaga","level_generator.py":"Rafak","controller.py":"Batoy"};
+const SRC_LINES={};
+for(const [f,id] of Object.entries(ACT_SRC)) SRC_LINES[f]=document.getElementById(id).textContent.replace(/\n$/,"").split("\n");
+const CV_ANCHORS={
+ "controller.py":{
+   plan:"def _plan", static:"def _static_enemies", patrols:"def _patrol_cells",
+   dist0:"dist = {start: 0}", whilep:"while pending:",
+   heappop:"cost, current = heapq.heappop(pending)",
+   goalpos:"return WorldAction(action_type=WorldActionType.EXIT)", limit:"if turn + 1 >= limit:",
+   patrol_now:"patrol_now = self._patrol_cells(state, turn)",
+   moves:"for step_row, step_column, action_type in moves:",
+   step:"step = Position(position.row + step_row", trav:"is_traversable(step):",
+   patr:"if step in patrol_now or step in patrol_next:",
+   node:"node = (step, turn + 1, defeated)",
+   waitcond:"if position not in patrol_now and position not in patrol_next:",
+   engagenode:"defeated | {enemy.enemy_id}",
+   waitnode:"==node = (position, turn + 1, defeated)",
+   waittype:"WorldActionType.WAIT in state.allowed_actions",
+   noggoal:"if goal is None:", buildsteps:"steps = []",
+   reverse:"steps.reverse()", retsteps:"return steps",
+ },
+ "terrain_generator.py":{
+   spec:"def generate_terrain(self, specification", rng:"rng = random.Random(seed)",
+   target:"target = min(high, max_cells)",
+   whileg:"while len(opened) < target and frontier:",
+   pickfr:"index = rng.randrange(len(frontier))",
+   addcell:"opened.add(cell)", fillgrid:"grid[row][column] = '.'",
+   retterrain:"return Terrain(",
+ },
+ "level_generator.py":{
+   openTiles:"open_tiles = self._open_tiles(terrain)",
+   pickends:"start, exit_pos = self._pick_endpoints",
+   shufA:"rng.shuffle(artifact_pool)", shufE:"rng.shuffle(enemy_pool)",
+   valRand:"value = rng.randint(specification.artifact_value_min",
+   penRand:"penalty = rng.randint(specification.enemy_penalty_min",
+   placeRet:"return tuple(artifacts), tuple(enemies)",
+ },
+ "artifact.py":{ valueprop:"return self._value" },
+ "enemy.py":{ penaltyprop:"return self._encounter_penalty" },
+};
+const CV_LINES={};
+const CV_ANCHOR_ERRORS=[];
+(function resolveAnchors(){
+  for(const [file,map] of Object.entries(CV_ANCHORS)){
+    const lines=SRC_LINES[file]; CV_LINES[file]={};
+    for(const [key,needle] of Object.entries(map)){
+      let exact=false, n=needle; if(n.startsWith("==")){ exact=true; n=n.slice(2); }
+      const hits=[];
+      lines.forEach((ln,i)=>{ if(exact ? ln.trim()===n : ln.includes(n)) hits.push(i+1); });
+      CV_LINES[file][key]=hits.length===1?hits[0]:null;
+      if(hits.length!==1) CV_ANCHOR_ERRORS.push(file+"::"+key+" -> "+hits.join(",")+" ("+hits.length+" hits)");
+    }
+  }
+})();
+function CL(file,key){ return (CV_LINES[file]&&key)?CV_LINES[file][key]:null; }
+const CV={ file:null, fn:null, owner:"", mode:"", events:[], ptr:-1 };
+function cvReset(){ CV.events=[]; CV.ptr=-1; updateScrub(); }
+function cvShow(file,fn,mode){
+  CV.file=file; CV.fn=fn||""; CV.owner=TEAM_OWNER[file]||""; CV.mode=mode||"AI";
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  set("cvFile",file); set("cvFn",CV.fn); set("cvOwner",CV.owner); set("cvMode",CV.mode);
+}
+function cvAdd(file,key,ann,snap){
+  const ln=CL(file,key); if(!ln) return;
+  CV.events.push({line:ln, ann:ann||"", snap:snap||{}, file});
+}
+function pyHighlight(line){
+  let out="", i=0, n=line.length;
+  const kw=new Set(["class","def","return","if","elif","else","for","while","in","not","and","or","is","None","True","False","import","from","as","pass","break","continue","with","try","except","finally","raise","lambda","global","assert","del","self","yield","float","int","tuple","Position","frozenset"]);
+  while(i<n){
+    const ch=line[i];
+    if(ch==="#"){ out+=`<span class="tok-com">${escHtml(line.slice(i))}</span>`; break; }
+    if(ch==='"'||ch==="'"){
+      const q=ch; let j=i+1, s="";
+      while(j<n && line[j]!==q){ if(line[j]==="\\"){ s+=line[j]+(line[j+1]||""); j+=2; } else { s+=line[j]; j++; } }
+      if(j<n) j++;
+      out+=`<span class="tok-str">${escHtml(q+s+(j<=n?q:""))}</span>`; i=j; continue;
+    }
+    if(/[A-Za-z_]/.test(ch)){
+      let j=i; while(j<n && /[A-Za-z0-9_]/.test(line[j])) j++;
+      const w=line.slice(i,j);
+      const cls=kw.has(w)?"tok-kw":(/^[A-Z]/.test(w)?"tok-dec":"tok-fn");
+      out+=`<span class="${cls}">${escHtml(w)}</span>`; i=j; continue;
+    }
+    if(/[0-9]/.test(ch)){
+      let j=i; while(j<n && /[0-9_.]/.test(line[j])) j++;
+      out+=`<span class="tok-num">${escHtml(line.slice(i,j))}</span>`; i=j; continue;
+    }
+    if(ch==="@@"){
+      let j=i; while(j<n && /[A-Za-z0-9_.]/.test(line[j])) j++;
+      out+=`<span class="tok-dec">${escHtml(line.slice(i,j))}</span>`; i=j; continue;
+    }
+    out+=escHtml(ch); i++;
+  }
+  return out;
+}
+function cvRender(){
+  const host=document.getElementById("cvCode"); if(!host) return;
+  if(!CV.file){ host.innerHTML=""; renderVars(); updateScrub(); return; }
+  const lines=SRC_LINES[CV.file];
+  const p=CV.ptr;
+  const execLine=CV.events.length?CV.events[Math.max(0,p)].line:-1;
+  const doneSet=new Set(); for(let i=0;i<Math.max(0,p);i++) doneSet.add(CV.events[i].line);
+  let html="";
+  lines.forEach((raw,i)=>{
+    const n=i+1, cls=["cv-line"]; let ann="";
+    if(n===execLine) cls.push("exec");
+    else if(doneSet.has(n)) cls.push("done");
+    if(p>=0){
+      if(CV.events[p].line===n) ann=CV.events[p].ann||"";
+      else { for(let j=Math.max(0,p-2);j<p;j++){ if(CV.events[j].line===n){ ann=CV.events[j].ann||""; break; } } }
+    }
+    html+=`<div class="${cls.join(" ")}"><span class="cv-arrow">▸</span><span class="cv-gutter">${n}</span><span class="cv-codef">${pyHighlight(raw)}</span>${ann?`<span class="cv-ann"># ${escHtml(ann)}</span>`:""}</div>`;
+  });
+  host.innerHTML=html;
+  const el=host.querySelector(".cv-line.exec");
+  if(el){ const sc=document.getElementById("cvScroll"); sc.scrollTop=Math.max(0, el.offsetTop - sc.clientHeight/2 + 24); }
+  renderVars(); updateScrub();
+}
+function renderVars(){
+  const host=document.getElementById("cvVars"); if(!host) return;
+  const e=CV.events[CV.ptr];
+  if(!e||!e.snap){ host.innerHTML=""; return; }
+  const prev=CV.events[CV.ptr-1]; const ps=prev&&prev.snap;
+  let html="";
+  for(const k of Object.keys(e.snap)){
+    const v=e.snap[k]; const changed=ps&&ps[k]!==v;
+    html+=`<div class="cv-var${changed?" changed":""}"><span class="lbl">${escHtml(k)}</span><b>${escHtml(String(v))}</b></div>`;
+  }
+  host.innerHTML=html;
+}
+function updateScrub(){
+  const sb=document.getElementById("cvScrub"); if(!sb) return;
+  sb.max=Math.max(0,CV.events.length-1);
+  sb.value=Math.max(0,CV.ptr);
+  const o=document.getElementById("cvScrubVal"); if(o) o.textContent=CV.ptr+"/"+CV.events.length;
+}
+function cvStepLine(){
+  if(!CV.events.length) return;
+  stopAI();
+  if(CV.ptr < CV.events.length-1) CV.ptr++; else CV.ptr=0;
+  cvRender();
+}
+function cvRunNext(){
+  if(!CV.events.length) return;
+  stopAI();
+  CV.ptr=CV.events.length-1; cvRender();
+  if(mode==="ai" && !state.over) startAI();
+}
+/* build the step trace for an AI turn, from the real act/plan */
+function cvTurn(act, plan, opts){
+  opts=opts||{};
+  CV.events=[]; CV.ptr=-1;
+  const ckey=CV_LINES["controller.py"];
+  if(!ckey) return;
+  const s=state;
+  const snapBase={ "turn":s.turn, "pos":"("+s.r+","+s.c+")",
+    "defeated":[...s.defeated].join(",")||"∅", "score":s.score };
+  const actType=act.type;
+  if(actType==="EXIT"){
+    cvShow("controller.py","_plan","AI");
+    cvAdd("controller.py","plan","agent already on the exit tile; skip planning",snapBase);
+    cvAdd("controller.py","goalpos","position == state.level.exit → true",Object.assign({},snapBase,{"branch":"EXIT"}));
+    cvAdd("controller.py","retsteps","choose EXIT",Object.assign({},snapBase,{"branch":"EXIT","plan[0]":"—"}));
+    CV.ptr=CV.events.length?CV.events.length-1:-1; cvRender(); return;
+  }
+  if(actType==="COLLECT"){
+    cvShow("controller.py","_plan","AI");
+    cvAdd("controller.py","plan","artifact here and clear of inbound patrol → COLLECT",snapBase);
+    cvAdd("controller.py","patrol_now","next-turn tile clear",Object.assign({},snapBase,{"branch":"COLLECT"}));
+    cvAdd("controller.py","retsteps","choose COLLECT (no plan needed)",Object.assign({},snapBase,{"branch":"COLLECT","plan[0]":"—"}));
+    CV.ptr=CV.events.length?CV.events.length-1:-1; cvRender(); return;
+  }
+  // MOVE / ENGAGE / WAIT → planning path
+  cvShow("controller.py","_plan","AI");
+  cvAdd("controller.py","plan","lowest-cost path over (position, turn, defeated) states",snapBase);
+  cvAdd("controller.py","dist0","dist = {start: 0}",snapBase);
+  cvAdd("controller.py","whilep","search loop — pop the lowest-cost state",snapBase);
+  const st=staticEnemies(world,s);
+  if(st.length) cvAdd("controller.py","static",st.length+" static, undefeated enemy(en)",Object.assign({},snapBase,{"static":st.length}));
+  cvAdd("controller.py","patrol_now","patrol cells now vs. next turn",Object.assign({},snapBase,{"patrol_now":patrolKeys(world,s.turn).size,"patrol_next":patrolKeys(world,s.turn+1).size}));
+  cvAdd("controller.py","moves","expand each neighbor move",snapBase);
+  let nextCell="—";
+  if(plan && plan.length){
+    const a=plan[0]; let r=s.r,c=s.c;
+    if(a[0]==="MOVE_NORTH")r--;else if(a[0]==="MOVE_SOUTH")r++;else if(a[0]==="MOVE_WEST")c--;else if(a[0]==="MOVE_EAST")c++;
+    nextCell="("+r+","+c+")";
+  }
+  cvAdd("controller.py","step","step = Position(...)  # "+nextCell,Object.assign({},snapBase,{"step":nextCell}));
+  cvAdd("controller.py","trav","tile is traversable",snapBase);
+  cvAdd("controller.py","patr","step clear of patrol now+next → False (pass)",Object.assign({},snapBase,{"patrol_clear":true}));
+  cvAdd("controller.py","node","node = (step, turn+1, defeated)",snapBase);
+  if(actType==="ENGAGE"||actType==="WAIT"){
+    cvAdd("controller.py","waitcond","staying put is safe (no patrol here)",Object.assign({},snapBase,{"action":actType}));
+    if(actType==="ENGAGE") cvAdd("controller.py","engagenode","ENGAGE costs 1 action + penalty",Object.assign({},snapBase,{"branch":"ENGAGE","target":act.target}));
+    else cvAdd("controller.py","waitnode","WAIT one turn",Object.assign({},snapBase,{"branch":"WAIT"}));
+  }
+  const planLen=plan?plan.length:0;
+  cvAdd("controller.py","retsteps","return steps — plan length "+planLen+", plan[0] = "+actType,Object.assign({},snapBase,{"plan length":planLen,"plan[0]":actType}));
+  CV.ptr=CV.events.length?CV.events.length-1:-1; cvRender();
+}
+/* level-load trace: terrain_generator + level_generator + identity */
+function cvLoad(){
+  CV.events=[]; CV.ptr=-1;
+  const t="terrain_generator.py", l="level_generator.py", ch="character.py";
+  const snap={ "topology":world.topology, "seed":world.seed, "open_tiles":0 };
+  cvShow(t,"generate_terrain","LOAD");
+  cvAdd(t,"spec","generate_terrain(specification, seed) called",snap);
+  cvAdd(t,"rng","seeded PRNG — reproducible output",snap);
+  cvAdd(t,"target","target open count picked from spec range",Object.assign({},snap,{"target":"?"}));
+  cvAdd(t,"whileg","frontier growth begins",snap);
+  cvAdd(t,"addcell","opened.add(cell) — a new floor tile grows",snap);
+  cvAdd(t,"fillgrid","write '.' into the grid",snap);
+  cvAdd(t,"retterrain","Terrain built from grid",snap);
+  cvShow(l,"generate_level","LOAD");
+  cvAdd(l,"openTiles","collect traversable open tiles",snap);
+  cvAdd(l,"pickends","pick start/exit (degree-1 ends for straight/bent)",snap);
+  cvAdd(l,"shufA","rng.shuffle(artifact_pool)",snap);
+  cvAdd(l,"valRand","value = rng.randint(...)",snap);
+  cvAdd(l,"shufE","rng.shuffle(enemy_pool)",snap);
+  cvAdd(l,"penRand","penalty = rng.randint(...)",snap);
+  cvAdd(l,"placeRet","return (artifacts, enemies)",snap);
+  CV.ptr=CV.events.length?CV.events.length-1:-1; cvRender();
+}
+function cvProp(file,key,ann,snap){
+  cvShow(file,"property",mode==="play"?"PLAY":"AI");
+  CV.events=[]; CV.ptr=-1;
+  cvAdd(file,key,ann,snap);
+  CV.ptr=0; cvRender();
+}
+function cvIdle(){
+  cvShow("controller.py","_plan (idle)","PLAY");
+  CV.events=[]; CV.ptr=-1;
+  cvAdd("controller.py","plan","human play: you are the controller — no AI code runs",{ "mode":"PLAY" });
+  CV.ptr=0; cvRender();
+}
+/* wiring listeners */
+(function cvWire(){
+  const step=document.getElementById("cvStepLine"); if(step) step.onclick=cvStepLine;
+  const runfn=document.getElementById("cvRunFn"); if(runfn) runfn.onclick=cvRunNext;
+  const close=document.getElementById("cvClose"); if(close) close.onclick=()=>{ const t=document.getElementById("t-live"); if(t) t.classList.remove("on"); const tab=document.querySelector('.tab[data-t="log"]'); if(tab) setTab("log"); };
+  const sb=document.getElementById("cvScrub"); if(sb) sb.oninput=()=>{ CV.ptr=Math.max(0,Math.min(CV.events.length-1,+sb.value)); cvRender(); };
+  const sc=document.getElementById("cvScroll");
+})();
+
 /* ===================== WIRING ===================== */
 function init(){
   const sel=document.getElementById("levelSel");
@@ -2540,6 +2838,7 @@ function init(){
 
   const lay=document.getElementById("layout");
   document.getElementById("btnWide").onclick=()=>lay.classList.toggle("wide");
+  document.getElementById("btnFit").onclick=()=>{ mapFit=!mapFit; tryWrite("adv_fit", mapFit?"1":""); applyCamera(); };
 
   const scrub=document.getElementById("scrub"), out=document.getElementById("scrubVal");
   scrub.oninput=()=>{ scrubDelta=+scrub.value; out.textContent = scrubDelta===0?"now":"+"+scrubDelta; renderGhosts(); };
