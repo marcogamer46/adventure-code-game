@@ -345,10 +345,10 @@
   .cv-scroll{position:relative; max-height:300px; overflow:auto; background:var(--bg); border:1px solid var(--line); border-radius:10px; box-shadow:var(--inset)}
   .cv-scroll::after{content:""; position:sticky; bottom:0; display:block; height:16px; pointer-events:none; background:linear-gradient(transparent, var(--bg))}
   .cv-code{margin:0; padding:8px 6px 20px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:14px; line-height:1.5; color:var(--text); white-space:pre-wrap; overflow-wrap:anywhere; word-break:break-word}
-  .cv-line{display:block; padding:0 6px; border-left:3px solid transparent; transition:background .15s, opacity .15s; border-radius:2px; white-space:pre-wrap}
-  .cv-gutter{display:inline-block; width:2.2em; text-align:right; color:var(--dim); user-select:none; font-size:12px}
+  .cv-line{display:block; padding:0 6px 0 3.5em; text-indent:-3.5em; border-left:3px solid transparent; transition:background .15s, opacity .15s; border-radius:2px; white-space:pre-wrap}
+  .cv-gutter{display:inline-block; width:2.2em; text-align:right; color:var(--dim); user-select:none; font-size:inherit; margin-right:.3em}
   .cv-arrow{display:inline-block; width:1em; color:var(--accent); font-weight:800; visibility:hidden; text-align:center}
-  .cv-codef{white-space:pre-wrap}
+  .cv-codef{white-space:pre-wrap; overflow-wrap:anywhere}
   .cv-ann{color:color-mix(in srgb, var(--muted) 78%, var(--bg)); font-style:italic; margin-left:1em; white-space:pre-wrap}
   .cv-line.exec{background:color-mix(in srgb, var(--accent) 16%, var(--bg))}
   .cv-line.exec .cv-arrow{visibility:visible}
@@ -431,6 +431,16 @@
   .summarycard .sc-score{font-size:18px; font-weight:800; color:var(--accent)}
   .summarycard .sc-turns,.summarycard .sc-cost{font-size:13px; color:var(--muted)}
   .summarycard .btn.retry{margin-top:8px}
+  .summarycard .sc-x{position:absolute; top:4px; right:4px; width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:transparent; border:none; color:var(--muted); font-size:22px; line-height:1; cursor:pointer; border-radius:10px}
+  .summarycard .sc-x:hover{color:var(--text); background:color-mix(in srgb, var(--line) 55%, transparent)}
+  .summarycard .sc-actions{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:10px}
+  .summarycard .sc-actions .btn{min-width:0; padding:6px 10px}
+  #resultChip{font-size:12.5px; display:none; align-items:center; gap:4px}
+  #resultChip.show{display:inline-flex}
+  .run-status{font-size:12px; padding:4px 10px; border-radius:999px; background:var(--panel2); border:1px solid var(--line); color:var(--muted); white-space:nowrap}
+  .run-status.running{color:var(--accent2); border-color:var(--accent2)}
+  .run-status.paused{color:var(--accent); border-color:var(--accent)}
+  .run-status.finished{color:var(--good); border-color:var(--good)}
   @keyframes failFade{to{filter:grayscale(1); opacity:.85}}
   #board.fail{animation:failFade .8s ease-out forwards}
   #board.fail #boardHost::after{opacity:0}
@@ -669,13 +679,14 @@
     <div class="sep"></div>
     <button id="btnStep" class="btn" title="Advance one turn">Step</button>
     <button id="btnRun" class="btn primary">Run <svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg></button>
+    <span id="runStatus" class="run-status" hidden></span>
     <div class="ctl"><label class="lbl" for="speed">speed</label><select id="speed" aria-label="Speed"><option value="700">0.7s</option><option value="400" selected>0.4s</option><option value="180">0.18s</option><option value="60">fast</option></select></div>
     <button id="btnTheme" class="btn icon-only" title="Toggle light / dark theme" aria-label="Toggle theme"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg></button>
   </div>
 
   <div class="layout" id="layout">
     <div class="card boardcol">
-      <div class="boardhead"><h2>Map</h2><button id="btnFit" class="btn icon" title="Fit whole map / follow agent" aria-label="Toggle fit map">⌗</button><button id="btnWide" class="btn icon" title="Toggle full-width right panel" aria-label="Toggle full width">⤢</button></div>
+      <div class="boardhead"><h2>Map</h2><button id="resultChip" class="btn" title="Reopen the result summary" aria-label="Reopen result">Result</button><button id="btnFit" class="btn icon" title="Fit whole map / follow agent" aria-label="Toggle fit map">⌗</button><button id="btnWide" class="btn icon" title="Toggle full-width right panel" aria-label="Toggle full width">⤢</button></div>
       <div class="legend">
         <span><span class="sw"><svg viewBox="0 0 24 24"><use href="#i-start"/></svg></span> start</span>
         <span><span class="sw"><svg viewBox="0 0 24 24"><use href="#i-exit"/></svg></span> exit</span>
@@ -1627,6 +1638,70 @@ function applyCamera(){
   pan.style.transform=`translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${scale})`;
   pan.dataset.scale=scale.toFixed(3);
 }
+/* ---- dismissable result popup ---- */
+let lastResult=null, resultCard=null, resultReturn=null;
+function resultChipEl(){ return document.getElementById("resultChip"); }
+function chipShow(show){ const c=resultChipEl(); if(c) c.classList.toggle("show", !!show && !!lastResult); }
+function closeResult(){
+  if(!resultCard) return;
+  const ret=resultReturn, card=resultCard;
+  resultCard=null; resultReturn=null;
+  card.remove();
+  if(ret && ret.isConnected && document.body.contains(ret)) ret.focus();
+  chipShow(true);
+}
+function showResult(opts){
+  if(resultCard) closeResult();
+  lastResult=opts;
+  const host=document.getElementById("boardHost"); if(!host) return;
+  resultReturn=(document.activeElement && document.activeElement!==document.body)?document.activeElement:null;
+  const card=document.createElement("div");
+  card.className="summarycard"; card.setAttribute("role","dialog"); card.setAttribute("aria-modal","true");
+  card.setAttribute("aria-label", opts.win?"Result: win":"Result: out of turns");
+  const title=opts.win?`Score <b>${opts.score}</b>`:"Out of turns";
+  const sub=opts.win
+    ? `<div class="sc-turns">Turns <b>${opts.turns}</b> / ${opts.max}</div><div class="sc-cost">Cost <b>-${opts.penalties}</b></div>`
+    : `<div class="sc-turns">You didn't reach the exit in ${opts.max} turns.</div>`;
+  card.innerHTML=`<button type="button" class="sc-x" aria-label="Close">×</button>
+    <div class="sc-score">${title}</div>
+    ${sub}
+    <div class="sc-actions">
+      <button type="button" class="btn primary retry">Play again</button>
+      <button type="button" class="btn replay">Replay this run</button>
+      <button type="button" class="btn close2">Close</button>
+    </div>`;
+  card.querySelector(".sc-x").onclick=closeResult;
+  card.querySelector(".close2").onclick=closeResult;
+  card.querySelector(".retry").onclick=()=>{ closeResult(); state=newState(); clearLog(); render(); message(""); };
+  card.querySelector(".replay").onclick=()=>{ const wasAI=(mode==="ai"); closeResult(); state=newState(); clearLog(); render(); message(""); if(wasAI) startAI(); };
+  host.appendChild(card); resultCard=card; chipShow(false);
+  (card.querySelector(".retry")||card.querySelector(".sc-x")).focus();
+}
+function resetResultForNewGame(){ if(resultCard){ resultCard.remove(); resultCard=null; } lastResult=null; chipShow(false); }
+document.addEventListener("click",ev=>{
+  if(!resultCard) return;
+  if(resultCard.contains(ev.target)) return;
+  if(ev.target.closest && ev.target.closest("#resultChip")) return;
+  closeResult();
+});
+
+/* ---- pause / resume for AI + auto run ---- */
+let aiPaused=false, aiLiveLoops=0, aiActive=false;
+function setPaused(p){ aiPaused=p; updateRunUI(); }
+function togglePause(){ if(mode!=="ai" || state.over || !aiActive) return; setPaused(!aiPaused); }
+function updateRunUI(){
+  const run=document.getElementById("btnRun"), st=document.getElementById("runStatus");
+  if(run){
+    const label = mode==="play" ? "Run" : (state.over || !aiActive) ? "Run" : aiPaused ? "Resume" : "Pause";
+    if(run.textContent!==label) run.textContent=label;
+  }
+  if(st){
+    let txt="", cls="run-status";
+    if(state.over){ txt="Finished"; cls="run-status finished"; }
+    else if(mode==="ai" && aiActive){ txt=aiPaused?"Paused":"Running"; cls="run-status "+(aiPaused?"paused":"running"); }
+    st.textContent=txt; st.className=cls; st.hidden = (txt==="");
+  }
+}
 function renderFX(){
   for(const fx of pendingFX){
     const k=key(fx.r,fx.c);
@@ -1648,27 +1723,11 @@ function renderFX(){
     const ec=[...document.querySelectorAll(".cell.exit")][0];
     if(ec){ for(let i=0;i<8;i++){ const p=document.createElement("span"); p.className="particle";
       const a=i/8*Math.PI*2; p.style.setProperty("--bx",Math.cos(a)*18+"px"); p.style.setProperty("--by",Math.sin(a)*14+"px"); ec.appendChild(p); } }
-    const host=document.getElementById("boardHost");
-    if(host && !host.querySelector(".summarycard")){
-      const sc=document.createElement("div"); sc.className="summarycard";
-      sc.innerHTML=`<div class="sc-score">Score <b>${state.score}</b></div>
-        <div class="sc-turns">Turns <b>${state.turn}</b> / ${world.maxTurns}</div>
-        <div class="sc-cost">Cost <b>-${state.penalties}</b></div>
-        <button class="btn primary retry">Play again</button>`;
-      sc.querySelector(".retry").onclick=()=>{ stopAI(); state=newState(); clearLog(); render(); message(""); };
-      host.appendChild(sc);
-    }
+    if(!resultCard) showResult({win:true, score:state.score, turns:state.turn, max:world.maxTurns, penalties:state.penalties});
   } else if(state && state.over && !state.win){
-    const host=document.getElementById("boardHost");
-    if(host && !host.querySelector(".summarycard")){
-      const sc=document.createElement("div"); sc.className="summarycard";
-      sc.innerHTML=`<div class="sc-score">Out of turns</div>
-        <div class="sc-turns">You didn't reach the exit in ${world.maxTurns} turns.</div>
-        <button class="btn primary retry">Try again</button>`;
-      sc.querySelector(".retry").onclick=()=>{ stopAI(); state=newState(); clearLog(); render(); message(""); };
-      host.appendChild(sc);
-    }
+    if(!resultCard) showResult({win:false, max:world.maxTurns});
   }
+  updateRunUI();
 }
 
 function message(txt,cls){ msgEl.textContent=txt; msgEl.className=cls||""; }
@@ -1707,9 +1766,9 @@ function setMode(m){
   actModeChanged(m);
   document.getElementById("btnPlay").classList.toggle("on",mode==="play");
   document.getElementById("btnAI").classList.toggle("on",mode==="ai");
-  document.getElementById("btnRun").innerHTML = (mode==="ai"?"Run AI ":"Run ")+'<svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg>';
   stopAI();
   if(mode==="ai"){ setTab("live"); startAI(); } else { render(); cvIdle(); }
+  updateRunUI();
 }
 
 function delayMs(){ return parseInt(document.getElementById("speed").value)||400; }
@@ -1727,21 +1786,33 @@ const LIVE_PHASES={
   move:[66,83], engage:[84,96], wait:[97,102], returnAction:[126,130],
 };
 
-/* ---- AI runner (async, live-highlighted) ---- */
+/* ---- AI runner (async, live-highlighted, pausable) ---- */
 let aiRunId=0;
 function startAI(){
   stopAI();
+  aiPaused=false;
+  aiActive=true;
   const id=++aiRunId;
   clearLog();
   setLive([113,115],"choose_action: called every turn — read the world observation, pick one action");
+  updateRunUI();
   aiLoop(id);
 }
-function stopAI(){ aiRunId++; }
+function stopAI(){ aiRunId++; aiActive=false; updateRunUI(); }
 async function aiLoop(id){
-  while(aiRunId===id && mode==="ai" && !state.over){
-    await sleep(delayMs());
-    if(aiRunId!==id || mode!=="ai" || state.over) break;
-    await runAIStep();
+  aiLiveLoops++;
+  try{
+    while(aiRunId===id && mode==="ai" && !state.over){
+      if(aiPaused || aiRunId!==id){ await sleep(100); continue; }
+      await sleep(delayMs());
+      if(aiRunId!==id || mode!=="ai" || state.over) break;
+      await runAIStep();
+      updateRunUI();
+    }
+  } finally {
+    aiLiveLoops--;
+    if(aiRunId===id) aiActive=false;
+    updateRunUI();
   }
 }
 function prefersReduced(){ try{ return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){ return false; } }
@@ -1857,6 +1928,11 @@ function aiPathCells(){
 
 /* ===================== CONTROLS ===================== */
 document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){ if(resultCard) closeResult(); return; }
+  if(mode==="ai"){
+    if(e.key===" "){ e.preventDefault(); togglePause(); }
+    return;
+  }
   if(mode!=="play") return;
   const k=e.key;
   const map={ ArrowUp:"MOVE_NORTH", ArrowDown:"MOVE_SOUTH", ArrowLeft:"MOVE_WEST", ArrowRight:"MOVE_EAST", w:"MOVE_NORTH", s:"MOVE_SOUTH", a:"MOVE_WEST", d:"MOVE_EAST" };
@@ -1884,6 +1960,7 @@ function doPlay(act){
 
 /* ===================== LEVEL SELECTION ===================== */
 function loadLevel(lvl){
+  resetResultForNewGame();
   world=buildWorld(lvl); state=newState();
   actReset();
   actRecord({file:"terrain_generator.py", pyFn:"generate_terrain", jsFn:"genTerrain", detail:"spec + seed → terrain"});
@@ -2693,10 +2770,16 @@ function renderVars(){
   const e=CV.events[CV.ptr];
   if(!e||!e.snap){ host.innerHTML=""; return; }
   const prev=CV.events[CV.ptr-1]; const ps=prev&&prev.snap;
+  const safeVal=v=>{
+    if(v===undefined||v===null) return "—";
+    if(typeof v==="number"&&!isFinite(v)) return "—";
+    if(typeof v==="string"&&/^\[object/.test(v)) return "—";
+    return v;
+  };
   let html="";
   for(const k of Object.keys(e.snap)){
     const v=e.snap[k]; const changed=ps&&ps[k]!==v;
-    html+=`<div class="cv-var${changed?" changed":""}"><span class="lbl">${escHtml(k)}</span><b>${escHtml(String(v))}</b></div>`;
+    html+=`<div class="cv-var${changed?" changed":""}"><span class="lbl">${escHtml(k)}</span><b>${escHtml(String(safeVal(v)))}</b></div>`;
   }
   host.innerHTML=html;
 }
@@ -2752,9 +2835,13 @@ function cvTurn(act, plan, opts){
   cvAdd("controller.py","patrol_now","patrol cells now vs. next turn",Object.assign({},snapBase,{"patrol_now":patrolKeys(world,s.turn).size,"patrol_next":patrolKeys(world,s.turn+1).size}));
   cvAdd("controller.py","moves","expand each neighbor move",snapBase);
   let nextCell="—";
+  let planFirst="—";
   if(plan && plan.length){
-    const a=plan[0]; let r=s.r,c=s.c;
-    if(a[0]==="MOVE_NORTH")r--;else if(a[0]==="MOVE_SOUTH")r++;else if(a[0]==="MOVE_WEST")c--;else if(a[0]==="MOVE_EAST")c++;
+    const a=plan[0];
+    if(Array.isArray(a) && a[0]) planFirst=String(a[0]);
+    else if(a!==undefined && a!==null) planFirst=String(a);
+    let r=s.r,c=s.c;
+    if(Array.isArray(a) && a[0]==="MOVE_NORTH")r--;else if(Array.isArray(a) && a[0]==="MOVE_SOUTH")r++;else if(Array.isArray(a) && a[0]==="MOVE_WEST")c--;else if(Array.isArray(a) && a[0]==="MOVE_EAST")c++;
     nextCell="("+r+","+c+")";
   }
   cvAdd("controller.py","step","step = Position(...)  # "+nextCell,Object.assign({},snapBase,{"step":nextCell}));
@@ -2763,11 +2850,11 @@ function cvTurn(act, plan, opts){
   cvAdd("controller.py","node","node = (step, turn+1, defeated)",snapBase);
   if(actType==="ENGAGE"||actType==="WAIT"){
     cvAdd("controller.py","waitcond","staying put is safe (no patrol here)",Object.assign({},snapBase,{"action":actType}));
-    if(actType==="ENGAGE") cvAdd("controller.py","engagenode","ENGAGE costs 1 action + penalty",Object.assign({},snapBase,{"branch":"ENGAGE","target":act.target}));
+    if(actType==="ENGAGE") cvAdd("controller.py","engagenode","ENGAGE costs 1 action + penalty",Object.assign({},snapBase,{"branch":"ENGAGE","target":act.target||"—"}));
     else cvAdd("controller.py","waitnode","WAIT one turn",Object.assign({},snapBase,{"branch":"WAIT"}));
   }
   const planLen=plan?plan.length:0;
-  cvAdd("controller.py","retsteps","return steps — plan length "+planLen+", plan[0] = "+actType,Object.assign({},snapBase,{"plan length":planLen,"plan[0]":actType}));
+  cvAdd("controller.py","retsteps","return steps — plan length "+planLen+", plan[0] = "+planFirst,Object.assign({},snapBase,{"plan length":planLen,"plan[0]":planFirst}));
   CV.ptr=CV.events.length?CV.events.length-1:-1; cvRender();
 }
 /* level-load trace: terrain_generator + level_generator + identity */
@@ -2820,11 +2907,18 @@ function init(){
   LEVELS.forEach((l,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=l.name; sel.appendChild(o); });
   let last=parseInt(tryRead("adv_level"),10); if(!(last>=0&&last<LEVELS.length)) last=0;
   sel.value=last;
-  sel.onchange=()=>{ stopAI(); loadLevel(LEVELS[sel.value]); tryWrite("adv_level", sel.value); };
-  document.getElementById("btnRandom").onclick=()=>{ stopAI(); if(mode!=="play") setMode("play"); newLevel(); };
-  document.getElementById("btnReset").onclick=()=>{ stopAI(); state=newState(); clearLog(); render(); message(""); };
+  sel.onchange=()=>{ stopAI(); resetResultForNewGame(); loadLevel(LEVELS[sel.value]); tryWrite("adv_level", sel.value); };
+  document.getElementById("btnRandom").onclick=()=>{ stopAI(); resetResultForNewGame(); if(mode!=="play") setMode("play"); newLevel(); };
+  document.getElementById("btnReset").onclick=()=>{ stopAI(); resetResultForNewGame(); state=newState(); clearLog(); render(); message(""); };
   document.getElementById("btnStep").onclick=()=>{ if(mode==="ai") runAIStep(); else doPlay("WAIT"); };
-  document.getElementById("btnRun").onclick=()=>{ if(mode==="play") setMode("ai"); else { stopAI(); startAI(); } };
+  document.getElementById("btnRun").onclick=()=>{
+    closeResult();
+    if(mode==="play"){ setMode("ai"); return; }
+    if(state.over){ resetResultForNewGame(); state=newState(); clearLog(); startAI(); return; }
+    if(!aiActive){ startAI(); return; }
+    togglePause();
+  };
+  document.getElementById("resultChip").onclick=()=>{ if(resultCard) closeResult(); else if(lastResult) showResult(lastResult); };
   document.getElementById("btnPlay").onclick=()=>setMode("play");
   document.getElementById("btnAI").onclick=()=>setMode("ai");
 
