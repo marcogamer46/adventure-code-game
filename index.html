@@ -5,31 +5,64 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Adventure — learn the six src/student components</title>
 <style>
-  /* ============ DESIGN TOKENS (dark default) ============ */
+  /* ============ DESIGN TOKENS (dungeon terminal — dark default) ============ */
   :root{
-    --bg:#0e1117; --panel:#151a24; --panel2:#1c2331; --line:#2a3346;
-    --text:#e9ecf3; --muted:#aab4c7; --dim:#8a94aa;
-    --accent:#5eead4; --accent2:#38bdf8; --warn:#fbbf24; --bad:#f87171;
-    --good:#34d399;
-    --wall:#5b6b8a; --floor:#10141d; --floor2:#161c28;
-    --enemy:#f47171; --patrol:#60a5fa; --artifact:#facc15; --start:#34d399; --exit:#fbbf24;
-    --hlbg:#0e3346; --hlborder:#38bdf8;
-    --shadow:0 8px 24px rgba(0,0,0,.35);
+    --bg:#0b0f14;            /* deep ink */
+    --panel:#12161d;         /* surface 1 — cards */
+    --panel2:#1a2029;        /* surface 2 — wells, code, raised controls */
+    --line:#2b3547;          /* neutral hairline */
+    --edge:rgba(255,255,255,.045);  /* inner top highlight */
+    --text:#ece9e2;          /* warm off-white body */
+    --muted:#a5a296;         /* secondary text */
+    --dim:#817c70;           /* tertiary / line numbers */
+    --accent:#f0b429;        /* torch amber — primary accent */
+    --accent2:#22d3ee;       /* cyan — secondary accent + focus */
+    --warn:#fbbf24; --bad:#f87171; --good:#34d399;
+    --wall:#59637a;          /* stone/circuit block base */
+    --floor:#0d1117;         /* recessed floor base */
+    --floor2:#131a23;        /* alternate tile (checker) */
+    --start:#34d399; --exit:#fbbf24; --artifact:#facc15; --enemy:#f87171; --patrol:#60a5fa;
+    --hlbg:#241a07; --hlborder:#f0b429;   /* amber-tinted code highlight */
+    --focusring:#22d3ee;
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+    --inset:inset 0 1px 0 rgba(255,255,255,.05);
+    --glow-start:0 0 0 1px rgba(52,211,153,.55),0 0 14px rgba(52,211,153,.45);
+    --glow-exit:0 0 0 1px rgba(251,191,36,.55),0 0 14px rgba(251,191,36,.45);
     --rad:14px;
   }
   .theme-light{
-    --bg:#ebeff5; --panel:#ffffff; --panel2:#f1f4f9; --line:#cdd5e3;
-    --text:#18202f; --muted:#46536b; --dim:#5b6880;
-    --accent:#0d8f80; --accent2:#0369a1; --warn:#a16207; --bad:#c22d2d; --good:#059669;
-    --wall:#c7d0df; --floor:#f7f9fd; --floor2:#eef2f8;
-    --enemy:#c22d2d; --patrol:#2563eb; --artifact:#b45309; --start:#059669; --exit:#b45309;
-    --hlbg:#dff1fb; --hlborder:#0369a1;
-    --shadow:0 8px 24px rgba(15,23,42,.12);
+    --bg:#eef0f4;
+    --panel:#ffffff;
+    --panel2:#f3f5f9;
+    --line:#ccd4e2;
+    --edge:rgba(255,255,255,.8);
+    --text:#1c2430;
+    --muted:#536073;
+    --dim:#778396;
+    --accent:#9a5200;        /* bronze-amber — text/border compliant */
+    --accent-fill:#e8a33d;   /* bright amber, only as large fill with dark text */
+    --accent2:#0369a1;
+    --warn:#a16207; --bad:#c22d2d; --good:#059669;
+    --wall:#c6cfdd;          /* light stone */
+    --floor:#f8fafc;
+    --floor2:#eef2f8;
+    --start:#059669; --exit:#9a6700; --artifact:#9a5200; --enemy:#c22d2d; --patrol:#2563eb;
+    --hlbg:#fbf0dd; --hlborder:#9a5200;
+    --focusring:#0369a1;
+    --shadow:0 10px 30px rgba(15,23,42,.10);
+    --inset:inset 0 1px 0 #ffffff;
+    --glow-start:0 0 0 1px rgba(5,150,105,.45),0 0 12px rgba(5,150,105,.35);
+    --glow-exit:0 0 0 1px rgba(154,103,0,.45),0 0 12px rgba(154,103,0,.35);
   }
   *{box-sizing:border-box; margin:0; padding:0}
+  ::-webkit-scrollbar{width:10px; height:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--panel2); border:1px solid var(--line); border-radius:99px}
+  ::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb, var(--accent2) 60%, var(--panel2))}
+  *{scrollbar-width:thin; scrollbar-color:var(--panel2) transparent}
   html{scroll-behavior:smooth}
   body{background:var(--bg); color:var(--text); font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; min-height:100vh; font-size:15px; line-height:1.5}
-  :focus-visible{outline:2px solid var(--accent2); outline-offset:2px; border-radius:4px}
+  :focus-visible{outline:2px solid var(--focusring); outline-offset:2px; border-radius:4px}
   code, pre, .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
   .wrap{max-width:1160px; margin:0 auto; padding:14px 16px 70px}
 
@@ -43,16 +76,19 @@
   .modes{display:flex; gap:6px}
   .spacer{flex:1}
   .btn{background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:9px;
-       padding:8px 13px; font-size:14px; cursor:pointer; transition:background .12s, border-color .12s, transform .06s; font-weight:550; min-height:36px}
-  .btn:hover:not(:disabled){border-color:var(--accent2)}
-  .btn:active:not(:disabled){transform:translateY(1px)}
+       padding:8px 13px; font-size:14px; cursor:pointer; transition:background .12s, border-color .12s, transform .06s, box-shadow .12s; font-weight:550; min-height:36px; box-shadow:inset 0 1px 0 var(--edge)}
+  .btn:hover:not(:disabled){border-color:var(--accent2); transform:translateY(-1px); box-shadow:inset 0 1px 0 var(--edge), 0 6px 18px rgba(0,0,0,.25)}
+  .btn:active:not(:disabled){transform:translateY(1px); box-shadow:var(--inset)}
+  .btn:focus-visible{outline:2px solid var(--focusring); outline-offset:2px}
   .btn.on{background:color-mix(in srgb, var(--accent) 14%, var(--panel2)); border-color:var(--accent); color:var(--accent)}
-  .btn.primary{background:var(--accent); color:#08110f; border-color:var(--accent)}
+  .btn.primary{background:var(--accent); color:#3a2500; border-color:var(--accent)}
   .btn.primary:hover:not(:disabled){filter:brightness(1.06)}
-  .theme-light .btn.primary{color:#ffffff}
+  .theme-light .btn.primary{color:#3a2500}
   .btn:disabled{opacity:.4; cursor:not-allowed}
   .btn.icon{min-width:38px; padding:8px 10px}
-  select{background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:8px 8px; font-size:14px; min-height:36px}
+  select{appearance:none; -webkit-appearance:none; background:var(--panel2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%23a5a296' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center; color:var(--text); border:1px solid var(--line); border-radius:9px; padding:8px 30px 8px 10px; font-size:14px; min-height:36px; cursor:pointer; box-shadow:inset 0 1px 0 var(--edge)}
+  select:hover{border-color:var(--accent2)}
+  select:focus-visible{outline:2px solid var(--focusring); outline-offset:1px}
   .sep{width:1px; height:24px; background:var(--line); margin:0 2px}
   label.lbl{font-size:13px; color:var(--muted); white-space:nowrap}
   .ctl{display:inline-flex; align-items:center; gap:6px; white-space:nowrap}
@@ -71,26 +107,36 @@
     .boardcol{position:sticky; top:74px; align-self:start}
     .rightpanel{max-height:calc(100vh - 120px); overflow-y:auto}
   }
-  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--rad); padding:14px 16px; box-shadow:var(--shadow)}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--rad); padding:14px 16px; box-shadow:inset 0 1px 0 var(--edge), var(--shadow)}
   .card h2{font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin-bottom:10px; font-weight:650}
   .boardhead{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
   .boardhead h2{margin-bottom:0}
 
   /* ============ BOARD ============ */
   #boardHost{position:relative; display:block; overflow:hidden}
+  #boardHost::after{content:""; position:absolute; inset:0; pointer-events:none; z-index:2; background:radial-gradient(closest-side at var(--ax,50%) var(--ay,50%), transparent 55%, color-mix(in srgb, #000 35%, transparent)); opacity:.5}
   #board{display:grid; gap:2px; padding:8px; background:var(--panel2); border-radius:10px; border:1px solid var(--line); margin:0 auto; min-width:0}
   .cell{width:100%; aspect-ratio:1/1; border-radius:4px; display:flex; align-items:center; justify-content:center; position:relative; line-height:1; min-width:0}
-  .cell.wall{background:var(--wall); border:1px solid color-mix(in srgb, var(--text) 14%, transparent)}
-  .cell.floor{background:var(--floor); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--line) 55%, transparent)}
-  .cell.floor.alt{background:var(--floor2)}
+  .cell.wall{background:linear-gradient(135deg, color-mix(in srgb, #fff 10%, var(--wall)), var(--wall) 55%, color-mix(in srgb, #000 22%, var(--wall))); box-shadow:var(--inset); position:relative}
+  .cell.wall::after{content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; background:repeating-linear-gradient(90deg, transparent 0 12px, rgba(0,0,0,.18) 12px 14px); opacity:.45}
+  .cell.floor{background-color:var(--floor); box-shadow:var(--inset), inset 0 0 0 1px color-mix(in srgb, var(--line) 40%, transparent); background-image:repeating-linear-gradient(0deg, color-mix(in srgb, var(--line) 12%, transparent) 0 1px, transparent 1px 100%), repeating-linear-gradient(90deg, color-mix(in srgb, var(--line) 12%, transparent) 0 1px, transparent 1px 100%)}
+  .cell.floor.alt{background-color:var(--floor2); background-image:repeating-linear-gradient(0deg, color-mix(in srgb, var(--line) 12%, transparent) 0 1px, transparent 1px 100%), repeating-linear-gradient(90deg, color-mix(in srgb, var(--line) 12%, transparent) 0 1px, transparent 1px 100%)}
   .cell .ico{width:84%; height:84%; display:flex; align-items:center; justify-content:center; color:var(--text)}
   .cell .ico svg{width:100%; height:100%; display:block}
+  /* sprite shading helpers (referenced by embedded symbol <style> vars) */
+  #board .ico svg, .legend svg{
+    --glow:color-mix(in srgb, currentColor 78%, #fff);
+    --shade:color-mix(in srgb, currentColor 58%, var(--bg));
+    --cut:var(--bg);
+    --tone:color-mix(in srgb, currentColor 72%, #fff);
+    --glowRing:color-mix(in srgb, currentColor 30%, transparent);
+  }
   .cell .badge{position:absolute; bottom:0; right:0; font-size:clamp(11px, calc(var(--cellsize,36px)*0.32), 18px); background:color-mix(in srgb, #000 78%, transparent); color:#fff; padding:0 4px; border-radius:6px; font-weight:800; line-height:1.3; box-shadow:0 0 0 1px color-mix(in srgb, var(--bg) 40%, transparent)}
   .cell.dim{opacity:.35}
   .cell.hl{outline:2px solid var(--accent2); outline-offset:-1px}
   .cell.path{background:color-mix(in srgb, var(--accent2) 16%, var(--floor))}
-  .cell.start{background:color-mix(in srgb, var(--start) 26%, var(--floor))}
-  .cell.exit{background:color-mix(in srgb, var(--exit) 24%, var(--floor))}
+  .cell.start{background:color-mix(in srgb, var(--start) 26%, var(--floor)); box-shadow:var(--glow-start)}
+  .cell.exit{background:color-mix(in srgb, var(--exit) 24%, var(--floor)); box-shadow:var(--glow-exit)}
   .cell.explored{background:color-mix(in srgb, var(--accent) 9%, var(--floor))}
   .cell.frontier{outline:1px dashed var(--accent2); outline-offset:-2px}
   .cell .valpop{position:absolute; left:50%; top:38%; transform:translateX(-50%); font-weight:800; font-size:clamp(11px, calc(var(--cellsize,36px)*0.32), 18px); pointer-events:none}
@@ -118,7 +164,12 @@
 
   /* ============ SCRUBBER + TRAIL CONTROLS ============ */
   .scrubrow{display:flex; align-items:center; gap:8px; margin-top:10px; font-size:13px; color:var(--muted)}
-  .scrubrow input[type=range]{flex:1; accent-color:var(--accent); min-height:24px; cursor:pointer}
+  .scrubrow input[type=range]{flex:1; -webkit-appearance:none; appearance:none; background:transparent; min-height:28px; cursor:pointer}
+  .scrubrow input[type=range]::-webkit-slider-runnable-track{height:4px; background:var(--panel2); border:1px solid var(--line); border-radius:99px; box-shadow:var(--inset)}
+  .scrubrow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:16px; height:16px; margin-top:-7px; border-radius:50%; background:var(--accent); border:1px solid var(--line); box-shadow:0 0 8px color-mix(in srgb, var(--accent) 55%, transparent)}
+  .scrubrow input[type=range]::-moz-range-track{height:4px; background:var(--panel2); border:1px solid var(--line); border-radius:99px}
+  .scrubrow input[type=range]::-moz-range-thumb{width:16px; height:16px; border-radius:50%; background:var(--accent); border:1px solid var(--line)}
+  .scrubrow input[type=range]:focus-visible{outline:2px solid var(--focusring); outline-offset:2px}
   .scrubrow output{font-weight:700; color:var(--text); min-width:52px; text-align:center}
 
   /* ============ TOUCH PAD ============ */
@@ -287,10 +338,124 @@
   .anm-float{animation:floatup .9s ease forwards; color:var(--bad); font-weight:800; z-index:5}
   .anm-flash{animation:ringflash .4s ease}
   .anm-shake{animation:shake .32s ease}
+
+  /* ---- level load reveal ---- */
+  @keyframes tileGrow{0%{transform:scale(0); opacity:0}60%{transform:scale(1.09); opacity:1}100%{transform:scale(1); opacity:1}}
+  @keyframes tileSweep{from{transform:translateX(-16%); opacity:0}to{transform:none; opacity:1}}
+  #board.loading .cell{animation:tileGrow .45s cubic-bezier(.34,1.56,.64,1) both; animation-delay:calc(var(--i,0)*9ms)}
+  #board.loading .cell.sweep{animation-name:tileSweep; animation-duration:.5s; animation-timing-function:ease-out}
+  @keyframes entityDrop{0%{transform:translateY(-120%) scale(.4); opacity:0}60%{transform:translateY(8%) scale(1.12); opacity:1}100%{transform:none; opacity:1}}
+  #board.loading .cell .ico{animation:entityDrop .5s cubic-bezier(.34,1.56,.64,1) both; animation-delay:calc(var(--drop,0)*45ms)}
+
+  /* ---- agent move ---- */
+  @keyframes agentStep{0%{transform:translate(var(--dx),var(--dy)) scaleX(.9) scaleY(1.09); opacity:.55}55%{transform:translate(0,0) scaleX(1.06) scaleY(.88)}100%{transform:none; opacity:1}}
+  .cell.pl .ico{animation:agentStep .16s ease-out}
+  @keyframes footFade{from{opacity:.45}to{opacity:0}}
+  .cell.footprint::after{content:""; position:absolute; inset:30%; border-radius:50%; background:color-mix(in srgb, var(--accent) 38%, transparent); box-shadow:0 0 6px color-mix(in srgb, var(--accent) 40%, transparent); animation:footFade .8s ease-out forwards}
+
+  /* ---- patrol glide ---- */
+  @keyframes ghostGlide{from{transform:translate(0,-24%) scale(.82); opacity:0}to{transform:none; opacity:var(--go,.28)}}
+  .ghost{--go:.28; animation:ghostGlide .5s ease-out both}
+  .ghost.cur{--go:1; animation-duration:.3s}
+  .ghost.soon{--go:.6}
+
+  /* ---- collect ---- */
+  @keyframes valueUp{0%{transform:translate(-50%,0); opacity:0}15%{opacity:1}100%{transform:translate(-50%,-34px); opacity:0}}
+  .valpop{animation:valueUp .9s ease-out forwards}
+  .valpop.green{color:var(--good)}
+  .valpop.neg{color:var(--bad)}
+  @keyframes burstFly{0%{transform:translate(0,0) scale(1); opacity:1}100%{transform:translate(var(--bx),var(--by)) scale(.2); opacity:0}}
+  .particle{position:absolute; left:50%; top:50%; width:6px; height:6px; border-radius:50%; background:var(--artifact); animation:burstFly .55s ease-out forwards; pointer-events:none}
+  @keyframes scoreTick{from{transform:scale(1.4); color:var(--good)}to{transform:none}}
+  .hud .chip b.tick{animation:scoreTick .5s ease}
+
+  /* ---- engage ---- */
+  @keyframes lunge{0%{transform:translate(0,0)}40%{transform:translate(var(--lx),var(--ly)) scale(1.18)}70%{transform:translate(calc(var(--lx)*.4),calc(var(--ly)*.4)) scale(.95)}100%{transform:none}}
+  .cell.engaging .ico{animation:lunge .28s ease-out}
+  .cell.hit{animation:ringflash .4s ease}
+  @keyframes dissolve{from{transform:scale(1); opacity:1}to{transform:scale(.1) rotate(12deg); opacity:0}}
+  .cell .ico.dissolve{animation:dissolve .4s ease-in forwards}
+
+  /* ---- collision ---- */
+  @keyframes bump{0%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}100%{transform:none}}
+  #board.bump{animation:bump .24s ease}
+  @keyframes redEdge{0%{box-shadow:inset 0 0 0 3px var(--bad); opacity:1}100%{box-shadow:inset 0 0 0 0 transparent; opacity:0}}
+  .cell.blocked{animation:redEdge .35s ease-out}
+
+  /* ---- win / fail ---- */
+  @keyframes portalOpen{0%{transform:scale(.5) rotate(-12deg); opacity:0}60%{transform:scale(1.18); opacity:1}100%{transform:none; opacity:1}}
+  .cell.exit.open .ico{animation:portalOpen .45s cubic-bezier(.34,1.56,.64,1) both}
+  @keyframes cardIn{from{transform:translateY(24px); opacity:0}to{transform:none; opacity:1}}
+  .summarycard{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:20; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 18px; min-width:190px; text-align:center; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:6px; animation:cardIn .45s cubic-bezier(.22,1,.36,1) both}
+  .summarycard .sc-score{font-size:18px; font-weight:800; color:var(--accent)}
+  .summarycard .sc-turns,.summarycard .sc-cost{font-size:13px; color:var(--muted)}
+  .summarycard .btn.retry{margin-top:8px}
+  @keyframes failFade{to{filter:grayscale(1); opacity:.85}}
+  #board.fail{animation:failFade .8s ease-out forwards}
+  #board.fail #boardHost::after{opacity:0}
+
+  /* ---- watch AI path + frontier ---- */
+  @keyframes dashFlow{to{background-position:0 0}}
+  #board.ai .cell.path{background-image:linear-gradient(90deg, var(--accent2) 0 55%, transparent 55%); background-size:220% 100%; animation:dashFlow .6s linear infinite}
+  @keyframes frontierRipple{0%{box-shadow:0 0 0 0 var(--accent2); opacity:1}100%{box-shadow:0 0 0 8px transparent; opacity:0}}
+  #board.ai .cell.explored{animation:frontierRipple .7s ease-out}
+
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{animation:none !important; transition:none !important}
     html{scroll-behavior:auto}
+    .valpop{animation:valueUp .2s ease-out forwards !important}
+    .anm-pop{animation:popfade .15s ease !important}
+    .cell.pl .ico{animation:agentFade .15s ease !important}
+    .summarycard{animation:cardFade .2s ease !important}
+    .cell .ico.dissolve{animation:dissolveFade .3s ease-in forwards !important}
+    .cell.exit.open .ico{animation:portalFade .2s ease !important}
   }
+  @keyframes popfade{from{opacity:0}to{opacity:1}}
+  @keyframes agentFade{from{opacity:.4}to{opacity:1}}
+  @keyframes cardFade{from{opacity:0}to{opacity:1}}
+  @keyframes dissolveFade{from{opacity:1}to{opacity:0}}
+  @keyframes portalFade{from{opacity:0}to{opacity:1}}
+
+  /* ============ CODE ACTIVITY STRIP ============ */
+  .activity-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--rad);
+    padding:12px 14px; margin-top:14px; box-shadow:var(--shadow)}
+  .act-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px; flex-wrap:wrap}
+  .activity-card h2{font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); font-weight:650; margin:0}
+  .act-toggle{font-size:12.5px; color:var(--muted); display:inline-flex; align-items:center; gap:5px; cursor:pointer; white-space:nowrap}
+  .act-toggle input{accent-color:var(--accent)}
+  .honesty{font-size:12px; color:var(--dim); border-left:3px solid var(--accent); background:color-mix(in srgb, var(--accent) 7%, var(--panel)); border-radius:0 8px 8px 0; padding:6px 9px; margin-bottom:10px; line-height:1.45}
+  .file-chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px}
+  .filechip{font-family:ui-monospace,monospace; font-size:12px; background:var(--panel2); color:var(--muted);
+    border:1px solid var(--line); border-radius:99px; padding:4px 10px; cursor:pointer; transition:background .15s, border-color .15s, color .15s, box-shadow .15s; position:relative}
+  .filechip:hover{border-color:var(--accent2); color:var(--text)}
+  .filechip.on{border-color:var(--accent); color:var(--accent)}
+  .filechip.dim{opacity:.45; filter:grayscale(.6)}
+  .filechip.dim .own-note{display:inline}
+  @keyframes aChipPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb, var(--accent2) 65%, transparent); background:color-mix(in srgb, var(--accent2) 22%, var(--panel2))}100%{box-shadow:0 0 0 14px transparent}}
+  .filechip.pulse{animation:aChipPulse .7s ease; border-color:var(--accent2); color:var(--text)}
+  .file-panel{border:1px solid var(--line); border-radius:10px; background:var(--panel2); padding:10px 12px; margin-bottom:10px; font-size:13px}
+  .file-panel h4{margin:0 0 6px; font-size:13px}
+  .file-panel .fp-owner{color:var(--accent); font-weight:650}
+  .file-panel .fp-purpose{color:var(--muted); margin:2px 0 8px}
+  .file-panel table{width:100%; border-collapse:collapse; font-size:12.5px}
+  .file-panel td{padding:4px 6px; border-top:1px solid var(--line); vertical-align:top}
+  .file-panel td:first-child{color:var(--muted); width:150px; font-family:ui-monospace,monospace; white-space:nowrap}
+  .file-panel td b{color:var(--accent2); font-family:ui-monospace,monospace}
+  .file-panel .fp-note{color:var(--dim); font-size:11.5px; margin-top:6px}
+  .call-feed{max-height:260px; overflow-y:auto; display:flex; flex-direction:column; gap:4px}
+  .call-entry{border:1px solid var(--line); border-radius:8px; background:var(--panel); padding:6px 9px; cursor:pointer; transition:border-color .12s; font-family:ui-monospace,monospace; font-size:12.5px; line-height:1.5}
+  .call-entry:hover{border-color:var(--accent2)}
+  .call-entry .ce-main{color:var(--text)}
+  .call-entry .ce-main .f{color:var(--accent2); font-weight:650}
+  .call-entry .ce-main .fn{color:var(--text)}
+  .call-entry .ce-detail{color:var(--muted); font-family:ui-sans-serif,system-ui,sans-serif; font-size:11.5px}
+  .call-entry .ce-detail b{color:var(--accent)}
+  .call-entry .ce-turn{float:right; color:var(--dim); font-size:11px; background:var(--panel2); border-radius:6px; padding:0 6px}
+  .call-entry .ce-py{margin-top:6px; border-top:1px solid var(--line); padding-top:6px; display:none}
+  .call-entry.show-py .ce-py{display:block}
+  .call-entry .ce-py pre{font-size:12px; line-height:1.5; background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:6px 8px; overflow-x:auto; max-height:180px; overflow-y:auto}
+  .call-entry .ce-py .cl{display:block; white-space:pre}
+  .call-entry .ce-py .codeln{color:var(--dim); user-select:none; display:inline-block; min-width:2.2em; margin-right:6px}
 
   /* ============ PRINT (ref sheets only) ============ */
   @media print{
@@ -311,12 +476,126 @@
   <!-- inline SVG sprite set (single style, shape distinguishes enemy vs patrol) -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
-      <symbol id="i-agent" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="15" rx="3" fill="currentColor"/><rect x="9" y="2" width="1.6" height="3" fill="currentColor"/><circle cx="9.8" cy="1.6" r="1.3" fill="currentColor"/><rect x="8" y="7" width="3" height="3" rx="1" fill="var(--bg)"/><rect x="13" y="7" width="3" height="3" rx="1" fill="var(--bg)"/><rect x="9" y="13" width="6" height="2" rx="1" fill="var(--bg)"/></symbol>
-      <symbol id="i-enemy" viewBox="0 0 24 24"><path d="M12 2.5 L13.9 6 L17.6 5.3 L17 9 L20.5 11 L17 13 L17.6 16.7 L13.9 16 L12 19.5 L10.1 16 L6.4 16.7 L7 13 L3.5 11 L7 9 L6.4 5.3 L10.1 6 Z" fill="currentColor"/><circle cx="9.6" cy="11" r="1.3" fill="var(--bg)"/><circle cx="14.4" cy="11" r="1.3" fill="var(--bg)"/></symbol>
-      <symbol id="i-patrol" viewBox="0 0 24 24"><path d="M5 6 C5 2.8 19 2.8 19 6 L18.6 19 L16 16.4 L13 19 L10 16.4 L7 19 L5.4 16.4 Z" fill="currentColor"/><circle cx="9.8" cy="9.5" r="1.4" fill="var(--bg)"/><circle cx="14.2" cy="9.5" r="1.4" fill="var(--bg)"/></symbol>
-      <symbol id="i-artifact" viewBox="0 0 24 24"><path d="M7 4 H17 L21 10 L12 20 L3 10 Z" fill="currentColor"/><path d="M3 10 H21 L12 20 Z" fill="var(--bg)" opacity=".35"/></symbol>
-      <symbol id="i-start" viewBox="0 0 24 24"><rect x="4" y="3" width="2" height="18" fill="currentColor"/><path d="M6 3 L21 8.5 L6 14 Z" fill="currentColor"/></symbol>
-      <symbol id="i-exit" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="18" rx="2" fill="currentColor"/><circle cx="13.6" cy="12" r="1.3" fill="var(--bg)"/><path d="M3 8 L6.5 12 L3 16" stroke="var(--bg)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <!-- === AGENT (robot) — idle bob === -->
+      <symbol id="i-agent" viewBox="0 0 24 24">
+        <style>
+          .a-bob{animation:spB 2.4s ease-in-out infinite}
+          .a-bob,.t-glow,.t-shade,.t-cut{transform-box:fill-box}
+          .t-glow{fill:color-mix(in srgb, currentColor 78%, #fff)}
+          .t-shade{fill:color-mix(in srgb, currentColor 58%, var(--bg))}
+          .t-cut{fill:var(--bg)}
+          @keyframes spB{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
+          @media (prefers-reduced-motion: reduce){.a-bob{animation:none !important}}
+        </style>
+        <g class="a-bob">
+          <circle cx="8.8" cy="8.1" r="1.05" fill="currentColor"/>
+          <rect x="8.05" y="8.45" width="1.5" height="2.95" rx=".75" fill="currentColor"/>
+          <rect x="9.4" y="2.9" width="5.2" height="5.3" rx="2.3" fill="currentColor"/>
+          <path d="M9.4 2.9 h5.2 v1.9 h-5.2 z" class="t-glow"/>
+          <rect x="10.35" y="4.95" width="3.3" height="1.5" rx=".75" class="t-cut"/>
+          <rect x="6.6" y="11.5" width="10.8" height="9.1" rx="2.7" fill="currentColor"/>
+          <path d="M6.6 11.5 h10.8 v3 h-10.8 z" class="t-glow"/>
+          <rect x="9.1" y="16.1" width="5.8" height="2.2" rx="1.1" class="t-cut"/>
+        </g>
+      </symbol>
+
+      <!-- === ENEMY (spiky monster) — idle pulse === -->
+      <symbol id="i-enemy" viewBox="0 0 24 24">
+        <style>
+          .e-pulse{animation:spP 1.8s ease-in-out infinite; transform-box:fill-box; transform-origin:center}
+          .e-pulse,.t-glow,.t-shade,.t-cut{transform-box:fill-box}
+          .t-glow{fill:color-mix(in srgb, currentColor 78%, #fff)}
+          .t-shade{fill:color-mix(in srgb, currentColor 58%, var(--bg))}
+          .t-cut{fill:var(--bg)}
+          @keyframes spP{0%,100%{transform:scale(1)}45%{transform:scale(1.06)}70%{transform:scale(.98)}}
+          @media (prefers-reduced-motion: reduce){.e-pulse{animation:none !important}}
+        </style>
+        <g class="e-pulse">
+          <path d="M12 1.6 L13.8 4.5 L17.1 3.7 L16.7 7 L19.9 8.8 L16.7 10.6 L17.1 13.9 L13.8 13.2 L12 16 L10.2 13.2 L6.9 13.9 L7.3 10.6 L4.1 8.8 L7.3 7 L6.9 3.7 L10.2 4.5 Z" fill="currentColor"/>
+          <path d="M10.4 14.5 L12 16 L13.6 14.5 Z" class="t-shade"/>
+          <circle cx="9.7" cy="10.9" r="1.15" class="t-cut"/>
+          <circle cx="14.3" cy="10.9" r="1.15" class="t-cut"/>
+          <path d="M8.7 9.4 l2 1.2 M15.3 9.4 l-2 1.2" stroke="var(--shade)" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M10.3 13.4 q1.7 1.3 3.4 0" stroke="var(--cut)" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+        </g>
+      </symbol>
+
+      <!-- === PATROL (ghost) — hover + flicker === -->
+      <symbol id="i-patrol" viewBox="0 0 24 24">
+        <style>
+          .p-hv{animation:spH 3s ease-in-out infinite, spF 3s linear infinite; transform-box:fill-box}
+          .p-hv,.t-glow,.t-shade,.t-cut{transform-box:fill-box}
+          .t-glow{fill:color-mix(in srgb, currentColor 78%, #fff)}
+          .t-shade{fill:color-mix(in srgb, currentColor 58%, var(--bg))}
+          .t-cut{fill:var(--bg)}
+          @keyframes spH{0%,100%{transform:translateY(0)}55%{transform:translateY(-1.1px)}}
+          @keyframes spF{0%,100%{opacity:1}45%{opacity:.82}70%{opacity:.94}}
+          @media (prefers-reduced-motion: reduce){.p-hv{animation:none !important}}
+        </style>
+        <g class="p-hv">
+          <path d="M4.4 6 C4.4 2.6 19.6 2.6 19.6 6 L19.2 18.4 L16.5 16.2 L13.5 18.6 L12 17.4 L10.5 18.6 L7.5 16.2 L4.8 18.4 Z" fill="currentColor"/>
+          <rect x="5.8" y="4.2" width="12.4" height="3.2" rx="1.6" class="t-glow"/>
+          <circle cx="9.8" cy="9.8" r="1.5" class="t-cut"/>
+          <circle cx="14.2" cy="9.8" r="1.5" class="t-cut"/>
+          <rect x="10.6" y="12.9" width="2.8" height="1.7" rx=".85" class="t-cut"/>
+        </g>
+      </symbol>
+
+      <!-- === ARTIFACT (gem) — idle shimmer === -->
+      <symbol id="i-artifact" viewBox="0 0 24 24">
+        <style>
+          .g-shimmer{animation:spS 2.6s ease-in-out infinite; transform-box:fill-box; transform-origin:center}
+          .g-shimmer,.t-glow,.t-shade,.t-cut{transform-box:fill-box}
+          .t-glow{fill:color-mix(in srgb, currentColor 78%, #fff)}
+          .t-shade{fill:color-mix(in srgb, currentColor 58%, var(--bg))}
+          .t-cut{fill:var(--bg)}
+          @keyframes spS{0%,100%{opacity:0}40%{opacity:1; transform:scale(1.15)}70%{opacity:0}}
+          @media (prefers-reduced-motion: reduce){.g-shimmer{animation:none !important}}
+        </style>
+        <path d="M7 3.6 H17 L21.4 10 L12 20.4 L2.6 10 Z" fill="currentColor"/>
+        <path d="M7 3.6 H17 L12 10 Z" class="t-glow"/>
+        <path d="M2.6 10 L12 20.4 L7 10 Z" class="t-shade"/>
+        <path d="M21.4 10 L12 20.4 L17 10 Z" class="t-shade"/>
+        <path class="g-shimmer" d="M16.2 4.6 l.7 1.6 1.6 .7 -1.6 .7 -.7 1.6 -.7-1.6-1.6-.7 1.6-.7 z" fill="var(--tone)"/>
+      </symbol>
+
+      <!-- === START (flag) — idle glow === -->
+      <symbol id="i-start" viewBox="0 0 24 24">
+        <style>
+          .s-glow{animation:spG 2.8s ease-in-out infinite; transform-box:fill-box; transform-origin:center}
+          .s-glow,.t-glow,.t-shade,.t-cut{transform-box:fill-box}
+          .t-glow{fill:color-mix(in srgb, currentColor 78%, #fff)}
+          .t-shade{fill:color-mix(in srgb, currentColor 58%, var(--bg))}
+          .t-cut{fill:var(--bg)}
+          .t-glowRing{fill:color-mix(in srgb, currentColor 30%, transparent)}
+          @keyframes spG{0%,100%{opacity:.55; transform:scale(1)}50%{opacity:1; transform:scale(1.06)}}
+          @media (prefers-reduced-motion: reduce){.s-glow{animation:none !important}}
+        </style>
+        <ellipse class="s-glow t-glowRing" cx="13" cy="8.6" rx="9.8" ry="8"/>
+        <rect x="5.1" y="2.3" width="2" height="18.7" rx="1" fill="currentColor"/>
+        <rect x="3.5" y="19.4" width="5.2" height="2.3" rx="1.15" fill="currentColor"/>
+        <path d="M7.1 2.9 L21.5 8.5 L7.1 14.1 Z" fill="currentColor"/>
+        <path d="M7.1 2.9 L13.2 5.6 L7.1 8.3 Z" class="t-glow"/>
+      </symbol>
+
+      <!-- === EXIT (door) — idle glow === -->
+      <symbol id="i-exit" viewBox="0 0 24 24">
+        <style>
+          .x-glow{animation:spG 2.8s ease-in-out infinite; transform-box:fill-box; transform-origin:center}
+          .x-glow,.t-glow,.t-shade,.t-cut{transform-box:fill-box}
+          .t-glow{fill:color-mix(in srgb, currentColor 78%, #fff)}
+          .t-shade{fill:color-mix(in srgb, currentColor 58%, var(--bg))}
+          .t-cut{fill:var(--bg)}
+          .t-glowRing{fill:color-mix(in srgb, currentColor 30%, transparent)}
+          @keyframes spG{0%,100%{opacity:.55; transform:scale(1)}50%{opacity:1; transform:scale(1.06)}}
+          @media (prefers-reduced-motion: reduce){.x-glow{animation:none !important}}
+        </style>
+        <ellipse class="x-glow t-glowRing" cx="12" cy="11.6" rx="9.6" ry="9.2"/>
+        <rect x="8.4" y="3" width="7.8" height="18" rx="2" fill="currentColor"/>
+        <rect x="10.3" y="4.9" width="4" height="14.2" rx="1.4" class="t-glow"/>
+        <circle cx="14.9" cy="12" r="1.1" class="t-cut"/>
+        <path d="M3 7.6 L6.6 11 L3 14.4" stroke="var(--cut)" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
       <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></symbol>
       <symbol id="i-ai" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="3" fill="currentColor"/><circle cx="8.5" cy="10" r="1.6" fill="var(--bg)"/><circle cx="15.5" cy="10" r="1.6" fill="var(--bg)"/><rect x="3" y="19" width="6" height="2" fill="currentColor"/><rect x="15" y="19" width="6" height="2" fill="currentColor"/></symbol>
       <symbol id="i-random" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="currentColor"/><circle cx="8.5" cy="8.5" r="1.5" fill="var(--bg)"/><circle cx="15.5" cy="8.5" r="1.5" fill="var(--bg)"/><circle cx="8.5" cy="15.5" r="1.5" fill="var(--bg)"/><circle cx="15.5" cy="15.5" r="1.5" fill="var(--bg)"/></symbol>
@@ -393,6 +672,24 @@
         </div>
       </div>
       <div id="msg">Use arrow keys / WASD to move. <b>C</b> collect · <b>E</b> engage · <b>Space</b> wait · <b>X</b> exit.</div>
+
+      <div class="card activity-card" id="activityStrip">
+        <div class="act-head">
+          <h2>Code activity</h2>
+          <label class="act-toggle"><input type="checkbox" id="actShowPy"> Show Python line ranges</label>
+        </div>
+        <div class="honesty" id="actHonesty">JS port of the Python files. The page runs a JavaScript translation, not your .py at runtime.</div>
+        <div class="file-chips" id="actChips" role="tablist">
+          <button class="filechip" data-file="character.py" role="tab" data-owner="Sanchez">character.py</button>
+          <button class="filechip" data-file="artifact.py" role="tab" data-owner="Oepena">artifact.py</button>
+          <button class="filechip" data-file="enemy.py" role="tab" data-owner="Oepena">enemy.py</button>
+          <button class="filechip" data-file="terrain_generator.py" role="tab" data-owner="Gonzaga">terrain_generator.py</button>
+          <button class="filechip" data-file="level_generator.py" role="tab" data-owner="Rafak">level_generator.py</button>
+          <button class="filechip" data-file="controller.py" role="tab" data-owner="Batoy">controller.py</button>
+        </div>
+        <div class="file-panel" id="actPanel" hidden></div>
+        <div class="call-feed" id="actFeed"></div>
+      </div>
     </div>
 
     <div class="card rightpanel">
@@ -998,6 +1295,8 @@ const ALLOWED = ["MOVE_NORTH","MOVE_SOUTH","MOVE_WEST","MOVE_EAST","WAIT","EXIT"
 
 /* ===================== GAME STATE ===================== */
 let world=null, state=null;
+let lastMove=null;            // last successful agent move {dr,dc,pr,pc} for slide + footprint
+let pendingFX=[];             // one-shot visual effects queued for the next render()
 let mode="play";              // "play" | "ai"
 let aiController=null, aiTimer=null, aiPlan=[];
 
@@ -1027,13 +1326,22 @@ function applyAction(w,s,act,log){
   if(dr||dc){
     const tr=s.r+dr, tc=s.c+dc;
     const why=blockedMove(w,s,tr,tc);
-    if(why){ (log||[]).push({a:"blocked",t:act,why:"can't move "+(why==="wall"?"into a wall":why==="patrol"?"into a patrol": "into an undefeated enemy")}); return; }
+    if(why){
+      (log||[]).push({a:"blocked",t:act,why:"can't move "+(why==="wall"?"into a wall":why==="patrol"?"into a patrol": "into an undefeated enemy")});
+      const b=document.getElementById("board"); if(b){ b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump"); }
+      const tcell=[...document.querySelectorAll(".cell")].find(el=>el.dataset.key===key(tr,tc));
+      if(tcell){ tcell.classList.remove("blocked"); void tcell.offsetWidth; tcell.classList.add("blocked"); }
+      return;
+    }
+    lastMove={dr,dc,pr:s.r,pc:s.c};
     s.r=tr; s.c=tc; advanceLike(s,log,act); return;
   }
   if(act==="COLLECT"){
     const a=world.artifactByKey[key(s.r,s.c)];
     if(a && !s.collected.has(a.id) && !patrolKeys(w,s.turn+1).has(key(s.r,s.c))){
       s.collected.add(a.id); s.score+=a.value; advanceTurn(s,log,act,"collected "+a.id+" +"+a.value);
+      pendingFX.push({type:"collect", r:s.r, c:s.c, val:a.value});
+      actRecord({file:"artifact.py", pyFn:"value", jsFn:"applyAction", detail:"read value from Artifact wrapper: "+a.id+" +"+a.value});
     } else { (log||[]).push({a:"blocked",t:act,why:"nothing to collect here (or a patrol arrives)"}); }
     return;
   }
@@ -1042,7 +1350,9 @@ function applyAction(w,s,act,log){
     for(const e of world.enemies){
       if(!s.defeated.has(e.id) && !world.patrols.some(p=>p.enemy_id===e.id) && manh([s.r,s.c],[e.r,e.c])===1){ target=e; break; }
     }
-    if(target){ s.defeated.add(target.id); s.score-=target.penalty; s.penalties+=target.penalty; advanceTurn(s,log,act,"defeated "+target.id+" -"+target.penalty+" pts"); }
+    if(target){ s.defeated.add(target.id); s.score-=target.penalty; s.penalties+=target.penalty; advanceTurn(s,log,act,"defeated "+target.id+" -"+target.penalty+" pts");
+      pendingFX.push({type:"engage", r:target.r, c:target.c, pen:target.penalty});
+      actRecord({file:"enemy.py", pyFn:"encounter_penalty", jsFn:"applyAction", detail:"read penalty from Enemy wrapper: "+target.id+" −"+target.penalty}); }
     else { (log||[]).push({a:"blocked",t:act,why:"no adjacent enemy to engage"}); }
     return;
   }
@@ -1190,17 +1500,26 @@ function renderDeadline(){
 }
 
 function render(pathCells){
+  boardEl.classList.remove("shake","bump");
+  boardEl.classList.toggle("ai", mode==="ai");
+  boardEl.classList.toggle("fail", !!(state && state.over && !state.win));
   boardEl.style.gridTemplateColumns=`repeat(${world.cols}, minmax(0,1fr))`;
   let cellPx=32;
   if(boardEl.clientWidth>0){ const avail=boardEl.clientWidth-16; cellPx=(avail-(world.cols-1)*2)/world.cols; }
   boardEl.style.setProperty("--cellsize", Math.max(8,Math.round(cellPx))+"px");
+  const hostEl=document.getElementById("boardHost");
+  if(hostEl){ hostEl.style.setProperty("--ax", ((state.c+0.5)/world.cols*100)+"%"); hostEl.style.setProperty("--ay", ((state.r+0.5)/world.rows*100)+"%"); }
   boardEl.innerHTML="";
+  const prevKey=lastMove?key(lastMove.pr,lastMove.pc):null;
   const patOcc=new Set();
   for(const p of world.patrols){ const q=patrolPos(p,state.turn); patOcc.add(key(q[0],q[1])); }
+  let entIdx=0;
   for(let r=0;r<world.rows;r++){
     for(let c=0;c<world.cols;c++){
       const d=document.createElement("div");
       const kk=key(r,c);
+      d.dataset.key=kk;
+      d.style.setProperty("--i", String(r*world.cols+c));
       const isWall=world.grid[r][c]==="#";
       d.className="cell "+(isWall?"wall":((r+c)%2===0?"floor":"floor alt"));
       if(!isWall){
@@ -1209,16 +1528,65 @@ function render(pathCells){
         if(renderExplored && renderExplored.has(kk)) d.classList.add("explored");
         if(pathCells && pathCells.has(kk) && !(r===state.r&&c===state.c)) d.classList.add("path");
       }
-      if(r===state.r&&c===state.c){ d.innerHTML=icon("player"); }
-      else if(kk===key(world.exit[0],world.exit[1])) d.innerHTML=icon("exit","color:var(--exit)");
-      else if(kk===key(world.start[0],world.start[1])) d.innerHTML=icon("start","color:var(--start)");
-      else if(world.artifactByKey[kk] && !state.collected.has(world.artifactByKey[kk].id)){ d.innerHTML=icon("artifact","color:var(--artifact)")+`<span class="badge">${world.artifactByKey[kk].value}</span>`; }
-      else if(world.enemyByKey[kk] && !state.defeated.has(world.enemyByKey[kk].id)){ d.innerHTML=icon("enemy","color:var(--enemy)")+`<span class="badge">${world.enemyByKey[kk].penalty}</span>`; }
-      else if(patOcc.has(kk)) d.innerHTML=icon("patrol","color:var(--patrol)");
+      let hasIco=false;
+      if(r===state.r&&c===state.c){ d.innerHTML=icon("player"); hasIco=true;
+        if(lastMove){ d.classList.add("pl"); d.style.setProperty("--dx",(lastMove.dc*cellPx)+"px"); d.style.setProperty("--dy",(lastMove.dr*cellPx)+"px"); }
+      }
+      else if(kk===key(world.exit[0],world.exit[1])){ d.innerHTML=icon("exit","color:var(--exit)"); hasIco=true; if(state.win) d.classList.add("open"); }
+      else if(kk===key(world.start[0],world.start[1])){ d.innerHTML=icon("start","color:var(--start)"); hasIco=true; }
+      else if(world.artifactByKey[kk] && !state.collected.has(world.artifactByKey[kk].id)){ d.innerHTML=icon("artifact","color:var(--artifact)")+`<span class="badge">${world.artifactByKey[kk].value}</span>`; hasIco=true; }
+      else if(world.enemyByKey[kk] && !state.defeated.has(world.enemyByKey[kk].id)){ d.innerHTML=icon("enemy","color:var(--enemy)")+`<span class="badge">${world.enemyByKey[kk].penalty}</span>`; hasIco=true; }
+      else if(patOcc.has(kk)){ d.innerHTML=icon("patrol","color:var(--patrol)"); hasIco=true; }
+      if(hasIco) d.style.setProperty("--drop", String(entIdx++));
+      if(prevKey && kk===prevKey && !(r===state.r&&c===state.c)) d.classList.add("footprint");
       boardEl.appendChild(d);
     }
   }
   renderHud(); renderDeadline(); renderGhosts();
+  renderFX();
+}
+function renderFX(){
+  for(const fx of pendingFX){
+    const k=key(fx.r,fx.c);
+    const cell=[...document.querySelectorAll(".cell")].find(el=>el.dataset.key===k);
+    if(!cell) continue;
+    if(fx.type==="collect"){
+      const v=document.createElement("div"); v.className="valpop green"; v.textContent="+"+fx.val; cell.appendChild(v);
+      for(let i=0;i<7;i++){ const p=document.createElement("span"); p.className="particle";
+        const a=i/7*Math.PI*2; p.style.setProperty("--bx",Math.cos(a)*14+"px"); p.style.setProperty("--by",Math.sin(a)*10+"px"); cell.appendChild(p); }
+      const score=document.querySelector("#hud .chip:nth-child(2) b"); if(score){ score.classList.remove("tick"); void score.offsetWidth; score.classList.add("tick"); }
+    } else {
+      const v=document.createElement("div"); v.className="valpop neg"; v.textContent="−"+fx.pen; cell.appendChild(v);
+      const b=document.getElementById("board"); if(b) b.classList.add("shake");
+    }
+  }
+  pendingFX.length=0;
+  lastMove=null;
+  if(state && state.win){
+    const ec=[...document.querySelectorAll(".cell.exit")][0];
+    if(ec){ for(let i=0;i<8;i++){ const p=document.createElement("span"); p.className="particle";
+      const a=i/8*Math.PI*2; p.style.setProperty("--bx",Math.cos(a)*18+"px"); p.style.setProperty("--by",Math.sin(a)*14+"px"); ec.appendChild(p); } }
+    const host=document.getElementById("boardHost");
+    if(host && !host.querySelector(".summarycard")){
+      const sc=document.createElement("div"); sc.className="summarycard";
+      sc.innerHTML=`<div class="sc-score">Score <b>${state.score}</b></div>
+        <div class="sc-turns">Turns <b>${state.turn}</b> / ${world.maxTurns}</div>
+        <div class="sc-cost">Cost <b>-${state.penalties}</b></div>
+        <button class="btn primary retry">Play again</button>`;
+      sc.querySelector(".retry").onclick=()=>{ stopAI(); state=newState(); clearLog(); render(); message(""); };
+      host.appendChild(sc);
+    }
+  } else if(state && state.over && !state.win){
+    const host=document.getElementById("boardHost");
+    if(host && !host.querySelector(".summarycard")){
+      const sc=document.createElement("div"); sc.className="summarycard";
+      sc.innerHTML=`<div class="sc-score">Out of turns</div>
+        <div class="sc-turns">You didn't reach the exit in ${world.maxTurns} turns.</div>
+        <button class="btn primary retry">Try again</button>`;
+      sc.querySelector(".retry").onclick=()=>{ stopAI(); state=newState(); clearLog(); render(); message(""); };
+      host.appendChild(sc);
+    }
+  }
 }
 
 function message(txt,cls){ msgEl.textContent=txt; msgEl.className=cls||""; }
@@ -1254,6 +1622,7 @@ function clearLog(){ document.getElementById("log").innerHTML=""; }
 /* ===================== MODES ===================== */
 function setMode(m){
   mode=m;
+  actModeChanged(m);
   document.getElementById("btnPlay").classList.toggle("on",mode==="play");
   document.getElementById("btnAI").classList.toggle("on",mode==="ai");
   document.getElementById("btnRun").innerHTML = (mode==="ai"?"Run AI ":"Run ")+'<svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg>';
@@ -1361,15 +1730,28 @@ async function runAIStep(){
   const D=delayMs();
   const act=chooseAction(world,state);
   const needsPlan=(act.type!=="EXIT" && act.type!=="COLLECT");
+  actRecord({file:"controller.py", pyFn:"choose_action", jsFn:"chooseAction"});
+  if(needsPlan){
+    actRecord({file:"controller.py", pyFn:"_plan", jsFn:"planPath"});
+    if(world.patrols.length){
+      actRecord({file:"controller.py", pyFn:"_patrol_cells", jsFn:"planPath", detail:world.patrols.length+" patrol(s)"});
+      world.patrols.forEach(p=>actRecord({file:"controller.py", pyFn:"_patrol_position", jsFn:"patrolPos", detail:p.enemy_id}));
+    }
+    const st=staticEnemies(world,state);
+    if(st.length) actRecord({file:"controller.py", pyFn:"_static_enemies", jsFn:"staticEnemies", detail:st.length+" static"});
+  }
   let plan=null, trace={};
   if(needsPlan) plan=planPath(world,state,trace);
   let rat="";
   if(act.type==="ENGAGE") rat=engageRationale(world,state,act.target);
   if(act.type==="EXIT"){
+    actRecord({file:"controller.py", pyFn:"choose_action", jsFn:"chooseAction", detail:"branch: <b>EXIT</b> — standing on the exit"});
     setLive(LIVE_PHASES.exit,"standing on the exit → EXIT");
   } else if(act.type==="COLLECT"){
+    actRecord({file:"controller.py", pyFn:"choose_action", jsFn:"chooseAction", detail:"branch: <b>COLLECT</b> — artifact here, clear of inbound patrol"});
     setLive(LIVE_PHASES.collect,"artifact on this tile and clear of inbound patrol → COLLECT");
   } else {
+    actRecord({file:"controller.py", pyFn:"choose_action", jsFn:"chooseAction", detail:"branch: <b>plan[0]</b> = "+act.type+(act.target?" → "+act.target:"")});
     setLive(LIVE_PHASES.planSetup,"_plan: build search state (position, turn, defeated-set)");
     if(trace.order && trace.order.length && !prefersReduced()){
       const total=Math.min(trace.order.length,40);
@@ -1445,9 +1827,20 @@ function doPlay(act){
 /* ===================== LEVEL SELECTION ===================== */
 function loadLevel(lvl){
   world=buildWorld(lvl); state=newState();
+  actReset();
+  actRecord({file:"terrain_generator.py", pyFn:"generate_terrain", jsFn:"genTerrain", detail:"spec + seed → terrain"});
+  const builder = lvl.topology==="STRAIGHT_PATH" ? "_straight_path"
+              : lvl.topology==="BENT_PATH" ? "_bent_path" : "_grow_tree";
+  actRecord({file:"terrain_generator.py", pyFn:builder, jsFn:"genTerrain", detail:"topology = "+lvl.topology});
+  actRecord({file:"level_generator.py", pyFn:"generate_level", jsFn:"makeRandomLevel", detail:"assemble LevelDefinition"});
+  actRecord({file:"level_generator.py", pyFn:"_pick_endpoints", jsFn:"makeRandomLevel", detail:"start ("+world.start[0]+","+world.start[1]+") · exit ("+world.exit[0]+","+world.exit[1]+")"});
+  actRecord({file:"level_generator.py", pyFn:"_place_entities", jsFn:"makeRandomLevel", detail:world.artifacts.length+" artifacts · "+world.enemies.length+" enemies"});
+  actRecord({file:"character.py", pyFn:"Character.__init__", jsFn:"newState", detail:"identity: agent_id = '"+ACT_AGENT_ID+"'"});
   stopAI(); clearLog();
   scrubDelta=0; const scr=document.getElementById("scrub"); if(scr) scr.value=0;
   const out=document.getElementById("scrubVal"); if(out) out.textContent="now";
+  const blEl=document.getElementById("board");
+  if(blEl){ blEl.classList.add("loading"); setTimeout(()=>blEl.classList.remove("loading"),700); }
   renderStory(); render(); setLiveState(); message("");
 }
 function newLevel(){
@@ -2001,6 +2394,128 @@ const PRESENT_HTML = `<div class="guide">
 <p>Watch AI runs a JavaScript port of <code>controller.py</code>. That port was verified against the real Python <code>AgentController</code> on the straight-path level (seed 123): identical action sequences across the full 24-turn solve. The seven baked levels are genuine outputs of the real generators. The <b>Random</b> button uses the JS port (<code>mulberry32</code> PRNG) — it reproduces the algorithms' behavior but not Python's exact random sequences.</p>
 </div>`;
 
+/* ===================== CODE ACTIVITY STRIP ===================== */
+const ACT_AGENT_ID="AGENT-1";
+const ACT_SRC = {
+  "character.py":"src-character","artifact.py":"src-artifact","enemy.py":"src-enemy",
+  "terrain_generator.py":"src-terrain","level_generator.py":"src-level","controller.py":"src-controller"
+};
+const ACT_JS_FNS = {
+  "character.py":["newState","render"],
+  "artifact.py":["applyAction","render"],
+  "enemy.py":["applyAction","render"],
+  "terrain_generator.py":["genTerrain","straight","bent","grow","hasBranch"],
+  "level_generator.py":["makeRandomLevel"],
+  "controller.py":["chooseAction","planPath","staticEnemies","patrolPos"]
+};
+const ACT_FN_LABEL = {
+  "generate_terrain":"generate_terrain()","_straight_path":"_straight_path()",
+  "_bent_path":"_bent_path()","_grow_tree":"_grow_tree()","generate_level":"generate_level()",
+  "_pick_endpoints":"_pick_endpoints()","_place_entities":"_place_entities()",
+  "choose_action":"choose_action()","_plan":"_plan()","_patrol_cells":"_patrol_cells()",
+  "_patrol_position":"_patrol_position()","_static_enemies":"_static_enemies()"
+};
+function actLineRanges(){
+  const R={};
+  for(const [file,srcId] of Object.entries(ACT_SRC)){
+    const lines=document.getElementById(srcId).textContent.replace(/\n$/,"").split("\n");
+    R[file]={};
+    const defs=[];
+    lines.forEach((ln,i)=>{ const m=/^(\s*)def\s+([A-Za-z_]\w*)\s*\(/.exec(ln); if(m) defs.push({ind:m[1].length,name:m[2],i}); });
+    defs.forEach((d,j)=>{ const nx=defs[j+1]; R[file][d.name]=[d.i+1, nx?nx.i:lines.length]; });
+  }
+  return R;
+}
+const ACT_RANGES=actLineRanges();
+let ACT_CTR={};
+function actResetCtr(){ ACT_CTR={}; for(const f of Object.keys(ACT_SRC)) ACT_CTR[f]={}; }
+function actCount(file, jsFn){ if(!ACT_CTR[file]) ACT_CTR[file]={}; ACT_CTR[file][jsFn]=(ACT_CTR[file][jsFn]||0)+1; }
+let ACT_FEED=[];  /* newest first */
+function actRecord(entry){
+  if(!entry || !entry.file) return;
+  if(entry.file==="controller.py" && mode==="play") return;  // never fake controller activity in human play
+  actCount(entry.file, entry.jsFn||"—");
+  actPulse(entry.file);
+  const turn = (state && typeof state.turn==="number") ? state.turn : 0;
+  const e = Object.assign({}, entry, {turn});
+  ACT_FEED.unshift(e);
+  actAddEntry(e);
+  if(ACT_FEED.length>200) ACT_FEED.pop();
+}
+function actPulse(file){
+  const chip=document.querySelector(`.filechip[data-file="${file}"]`); if(!chip) return;
+  chip.classList.remove("pulse"); void chip.offsetWidth; chip.classList.add("pulse");
+  setTimeout(()=>chip.classList.remove("pulse"), 750);
+}
+function actAddEntry(e){
+  const feed=document.getElementById("actFeed"); if(!feed) return;
+  const el=document.createElement("div");
+  el.className="call-entry"; el.dataset.file=e.file;
+  const label=ACT_FN_LABEL[e.pyFn]||e.pyFn;
+  const d=`<div class="ce-main"><span class="f">${escHtml(e.file)}</span> &gt; <span class="fn">${escHtml(label)}</span> <span class="ce-turn">T${e.turn}</span></div>`;
+  const det=e.detail?`<div class="ce-detail">${e.detail}</div>`:"";
+  el.innerHTML=d+det;
+  el.addEventListener("click",()=>actJump(e));
+  feed.prepend(el);
+  return el;
+}
+function actJump(e){
+  const [lo,hi]=ACT_RANGES[e.file][e.pyFn]||[1,1];
+  actShowCodeRange(e.file, lo, hi);
+}
+function actShowCodeRange(file, lo, hi){
+  setTab("code");
+  showFile(file);
+  const sec=[...document.querySelectorAll("#t-code .section")].find(s=>{
+    const f=s.querySelector("h3 .f"); return f && f.textContent.trim()===file; });
+  if(!sec) return;
+  sec.querySelectorAll(".cl").forEach(el=>{
+    const n=+el.dataset.n||0; el.classList.toggle("hl", n>=lo && n<=hi); });
+  const first=sec.querySelector(".cl.hl"); if(first) first.scrollIntoView({behavior:"smooth", block:"center"});
+}
+function actTogglePy(on){
+  document.querySelectorAll(".call-entry").forEach((el,i)=>{
+    if(!on){ el.classList.remove("show-py"); el.querySelector(".ce-py")?.remove(); return; }
+    const e=ACT_FEED[i]; if(!e) return;
+    const [lo,hi]=ACT_RANGES[e.file][e.pyFn]||[1,1];
+    const src=document.getElementById(ACT_SRC[e.file]).textContent.replace(/\n$/,"").split("\n");
+    let h=""; for(let n=lo;n<=hi;n++){ const line=src[n-1]; if(line===undefined) continue;
+      h+=`<span class="cl"><span class="codeln">${String(n).padStart(2,"0")}</span> ${escHtml(line)}</span>\n`; }
+    let py=el.querySelector(".ce-py"); if(!py){ py=document.createElement("div"); py.className="ce-py"; el.appendChild(py); }
+    py.innerHTML=`<pre>${h}</pre>`; el.classList.add("show-py");
+  });
+}
+document.getElementById("actShowPy").addEventListener("change",e=>actTogglePy(e.target.checked));
+function actShowPanel(file){
+  const panel=document.getElementById("actPanel"); if(!panel) return;
+  document.querySelectorAll(".filechip").forEach(c=>c.classList.toggle("on", c.dataset.file===file));
+  const owner=document.querySelector(`.filechip[data-file="${file}"]`).dataset.owner;
+  const b=BLURB[file]||"";
+  let rows="";
+  (ACT_JS_FNS[file]||[]).forEach(fn=>{
+    rows+=`<tr><td>${fn}()</td><td>${ACT_CTR[file]?.[fn]||0}×</td></tr>`; });
+  panel.hidden=false;
+  panel.innerHTML=`<h4>${file} <span class="fp-owner">· ${owner}</span></h4>
+    <div class="fp-purpose">${b}</div><table>${rows||"<tr><td>—</td><td>no JS port surface</td></tr>"}</table>`;
+}
+document.getElementById("actChips").addEventListener("click",e=>{
+  const c=e.target.closest(".filechip"); if(c) actShowPanel(c.dataset.file); });
+function actModeChanged(m){
+  const chip=document.querySelector('.filechip[data-file="controller.py"]');
+  if(!chip) return;
+  if(m==="play"){
+    chip.classList.add("dim");
+    if(!chip.querySelector(".own-note")){ const n=document.createElement("span"); n.className="own-note"; n.textContent=" · idle: you are the controller"; chip.appendChild(n); }
+  } else {
+    chip.classList.remove("dim"); chip.querySelector(".own-note")?.remove();
+  }
+}
+function actReset(){
+  ACT_FEED.length=0; actResetCtr();
+  const feed=document.getElementById("actFeed"); if(feed) feed.innerHTML="";
+  const panel=document.getElementById("actPanel"); if(panel){ panel.hidden=true; panel.innerHTML=""; }
+}
+
 /* ===================== WIRING ===================== */
 function init(){
   const sel=document.getElementById("levelSel");
@@ -2040,6 +2555,7 @@ function init(){
   setLiveState();
   document.getElementById("presentText").innerHTML=PRESENT_HTML;
   renderFlow(); renderEdge(); renderRef(); renderExplain();
+  actReset(); actModeChanged(mode);
   loadLevel(LEVELS[sel.value]);
   renderStory();
 }
