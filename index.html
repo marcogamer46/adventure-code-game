@@ -11,7 +11,7 @@
     --text:#e9ecf3; --muted:#aab4c7; --dim:#8a94aa;
     --accent:#5eead4; --accent2:#38bdf8; --warn:#fbbf24; --bad:#f87171;
     --good:#34d399;
-    --wall:#2c3448; --floor:#151a24; --floor2:#1b2230;
+    --wall:#5b6b8a; --floor:#10141d; --floor2:#161c28;
     --enemy:#f47171; --patrol:#60a5fa; --artifact:#facc15; --start:#34d399; --exit:#fbbf24;
     --hlbg:#0e3346; --hlborder:#38bdf8;
     --shadow:0 8px 24px rgba(0,0,0,.35);
@@ -21,7 +21,7 @@
     --bg:#ebeff5; --panel:#ffffff; --panel2:#f1f4f9; --line:#cdd5e3;
     --text:#18202f; --muted:#46536b; --dim:#5b6880;
     --accent:#0d8f80; --accent2:#0369a1; --warn:#a16207; --bad:#c22d2d; --good:#059669;
-    --wall:#c6cede; --floor:#fbfcfe; --floor2:#edf1f7;
+    --wall:#c7d0df; --floor:#f7f9fd; --floor2:#eef2f8;
     --enemy:#c22d2d; --patrol:#2563eb; --artifact:#b45309; --start:#059669; --exit:#b45309;
     --hlbg:#dff1fb; --hlborder:#0369a1;
     --shadow:0 8px 24px rgba(15,23,42,.12);
@@ -55,9 +55,14 @@
   select{background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:8px 8px; font-size:14px; min-height:36px}
   .sep{width:1px; height:24px; background:var(--line); margin:0 2px}
   label.lbl{font-size:13px; color:var(--muted); white-space:nowrap}
+  .ctl{display:inline-flex; align-items:center; gap:6px; white-space:nowrap}
+  .btn .bi{width:15px; height:15px; vertical-align:-2px; margin-right:5px}
+  .btn.icon-only{padding:8px 9px; min-width:38px}
+  .btn.icon-only .bi{width:17px; height:17px; margin:0}
+  svg.tiny{width:15px; height:15px; vertical-align:-2px; display:inline-block}
 
   /* ============ LAYOUT ============ */
-  .layout{display:grid; grid-template-columns:minmax(430px,1.05fr) minmax(360px,1fr); gap:16px; align-items:start}
+  .layout{display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:16px; align-items:start}
   .layout.wide{grid-template-columns:1fr}
   .layout.wide .boardcol{display:none}
   @media (max-width:920px){ .layout{grid-template-columns:1fr} }
@@ -67,15 +72,15 @@
   .boardhead h2{margin-bottom:0}
 
   /* ============ BOARD ============ */
-  #boardHost{position:relative; display:flex; justify-content:center}
-  #board{display:grid; gap:2px; padding:8px; background:var(--panel2); border-radius:10px; border:1px solid var(--line)}
-  .cell{width:100%; aspect-ratio:1/1; border-radius:3px; display:flex; align-items:center; justify-content:center; position:relative; line-height:1}
-  .cell.wall{background:var(--wall)}
-  .cell.floor{background:var(--floor)}
+  #boardHost{position:relative; display:block; overflow-x:auto; -webkit-overflow-scrolling:touch}
+  #board{display:grid; gap:2px; padding:8px; background:var(--panel2); border-radius:10px; border:1px solid var(--line); margin:0 auto; min-width:0}
+  .cell{width:100%; aspect-ratio:1/1; border-radius:4px; display:flex; align-items:center; justify-content:center; position:relative; line-height:1; min-width:0}
+  .cell.wall{background:var(--wall); border:1px solid color-mix(in srgb, var(--text) 14%, transparent)}
+  .cell.floor{background:var(--floor); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--line) 55%, transparent)}
   .cell.floor.alt{background:var(--floor2)}
   .cell .ico{width:84%; height:84%; display:flex; align-items:center; justify-content:center; color:var(--text)}
   .cell .ico svg{width:100%; height:100%; display:block}
-  .cell .badge{position:absolute; bottom:-2px; right:-2px; font-size:.48em; background:rgba(0,0,0,.78); color:#fff; padding:1px 4px; border-radius:6px; font-weight:700; line-height:1.25}
+  .cell .badge{position:absolute; bottom:0; right:0; font-size:clamp(11px, calc(var(--cellsize,36px)*0.32), 18px); background:color-mix(in srgb, #000 78%, transparent); color:#fff; padding:0 4px; border-radius:6px; font-weight:800; line-height:1.3; box-shadow:0 0 0 1px color-mix(in srgb, var(--bg) 40%, transparent)}
   .cell.dim{opacity:.35}
   .cell.hl{outline:2px solid var(--accent2); outline-offset:-1px}
   .cell.path{background:color-mix(in srgb, var(--accent2) 16%, var(--floor))}
@@ -83,7 +88,7 @@
   .cell.exit{background:color-mix(in srgb, var(--exit) 24%, var(--floor))}
   .cell.explored{background:color-mix(in srgb, var(--accent) 9%, var(--floor))}
   .cell.frontier{outline:1px dashed var(--accent2); outline-offset:-2px}
-  .cell .valpop{position:absolute; left:50%; top:40%; transform:translateX(-50%); font-weight:800; font-size:.72em; pointer-events:none}
+  .cell .valpop{position:absolute; left:50%; top:38%; transform:translateX(-50%); font-weight:800; font-size:clamp(11px, calc(var(--cellsize,36px)*0.32), 18px); pointer-events:none}
   /* ghost trail overlay (inside #boardHost) */
   .trailLayer{position:absolute; inset:8px; pointer-events:none}
   .ghost{position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:.28; color:var(--patrol)}
@@ -94,7 +99,8 @@
   .ghost .gnum{color:var(--text)}
 
   /* ============ HUD + DEADLINE ============ */
-  .hud{display:grid; grid-template-columns:repeat(5, auto); gap:8px; margin-top:12px; flex-wrap:wrap}
+  .hud{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px}
+  .hud .chip{min-width:0}
   .hud .chip{background:var(--panel2); border:1px solid var(--line); padding:7px 11px; border-radius:10px; font-size:13.5px; color:var(--text); white-space:nowrap; display:inline-flex; gap:5px; align-items:baseline}
   .hud .chip b{color:var(--accent); font-size:15px}
   .hud .chip.cost b{color:var(--bad)}
@@ -111,9 +117,13 @@
   .scrubrow output{font-weight:700; color:var(--text); min-width:52px; text-align:center}
 
   /* ============ TOUCH PAD ============ */
-  .touchpad{margin-top:12px; display:grid; gap:12px}
+  .touchpad{margin-top:12px; display:none; gap:12px}
+  @media (pointer:coarse), (hover:none){ .touchpad{display:grid} }
+  @media (max-width:640px){ .touchpad{display:grid} }
   .dpad{display:grid; grid-template-columns:repeat(3, 64px); gap:6px; justify-content:center}
-  .dpad .padbtn{width:64px; height:56px; font-size:20px; border-radius:12px; background:var(--panel2); color:var(--text); border:1px solid var(--line); cursor:pointer}
+  .dpad .padbtn{width:64px; height:56px; border-radius:12px; background:var(--panel2); color:var(--text); border:1px solid var(--line); cursor:pointer; display:flex; align-items:center; justify-content:center}
+  .dpad .padbtn .bi{width:22px; height:22px; pointer-events:none}
+  .actions .actbtn .bi{width:16px; height:16px; vertical-align:-3px; margin-right:4px; color:var(--accent2)}
   .dpad .padbtn:hover{border-color:var(--accent2)}
   .dpad .padbtn:active{background:var(--accent); color:#08110f}
   .dpad .padbtn.center{font-size:13px; color:var(--muted)}
@@ -130,8 +140,13 @@
   #msg.ok{color:var(--accent); font-weight:600}
 
   /* ============ TABS / PANELS ============ */
-  .tabs{display:flex; gap:5px; margin-bottom:12px; flex-wrap:wrap}
-  .tab{background:transparent; color:var(--muted); border:1px solid transparent; border-radius:8px; padding:7px 11px; font-size:13.5px; cursor:pointer; min-height:34px}
+  .groupbar{display:flex; gap:4px; margin-bottom:8px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch}
+  .gbtn{background:transparent; color:var(--muted); border:none; border-bottom:2px solid transparent; padding:7px 12px; font-size:13.5px; cursor:pointer; white-space:nowrap; min-height:36px; font-weight:600}
+  .gbtn:hover{color:var(--text)}
+  .gbtn.on{color:var(--accent); border-bottom-color:var(--accent)}
+  .subrow{display:flex; gap:5px; margin-bottom:12px; overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch; padding-bottom:2px}
+  .subrow .tab{flex:0 0 auto}
+  .tab{background:transparent; color:var(--muted); border:1px solid transparent; border-radius:8px; padding:6px 11px; font-size:13.5px; cursor:pointer; min-height:32px; white-space:nowrap}
   .tab.on{background:var(--panel2); color:var(--text); border-color:var(--line); font-weight:600}
   .tpanel{display:none}
   .tpanel.on{display:block}
@@ -174,6 +189,10 @@
   .note.warn{background:color-mix(in srgb, var(--warn) 10%, var(--panel)); border-color:var(--warn)}
   .note.warn b{color:var(--warn)}
 
+  .ctlgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0}
+  @media (max-width:640px){ .ctlgrid{grid-template-columns:1fr} }
+  details.howto summary{cursor:pointer; color:var(--accent2); font-size:14px; font-weight:600; padding:6px 0; user-select:none}
+  details.howto[open] summary{margin-bottom:6px}
   .guide{margin:0; font-size:14.5px; color:var(--text); line-height:1.65}
   .guide h4{color:var(--accent); margin:16px 0 6px; font-size:13.5px; text-transform:uppercase; letter-spacing:.4px}
   .guide h5{color:var(--accent2); margin:12px 0 4px; font-size:14.5px}
@@ -188,6 +207,7 @@
   table.map .f{font-family:ui-monospace,monospace; color:var(--accent2)}
 
   .legend{display:flex; flex-wrap:wrap; gap:12px; font-size:13px; color:var(--muted); margin-bottom:10px}
+  @media (max-width:720px){ .legend{display:grid; grid-template-columns:repeat(2,1fr); gap:8px 12px} }
   .legend span{display:inline-flex; align-items:center; gap:5px}
   .legend svg{width:16px; height:16px}
   .legend .sw{width:16px; height:16px; display:inline-block; color:var(--text)}
@@ -264,7 +284,7 @@
   /* ============ PRINT (ref sheets only) ============ */
   @media print{
     body{background:#fff; color:#000; font-size:12pt}
-    .topbar, .boardcol, .tabs, .no-print{display:none !important}
+    .topbar, .boardcol, .groupbar, .subrow, .no-print{display:none !important}
     .layout{display:block !important}
     .rightpanel{box-shadow:none; border:none; padding:0}
     .tpanel{display:none !important}
@@ -286,26 +306,39 @@
       <symbol id="i-artifact" viewBox="0 0 24 24"><path d="M7 4 H17 L21 10 L12 20 L3 10 Z" fill="currentColor"/><path d="M3 10 H21 L12 20 Z" fill="var(--bg)" opacity=".35"/></symbol>
       <symbol id="i-start" viewBox="0 0 24 24"><rect x="4" y="3" width="2" height="18" fill="currentColor"/><path d="M6 3 L21 8.5 L6 14 Z" fill="currentColor"/></symbol>
       <symbol id="i-exit" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="18" rx="2" fill="currentColor"/><circle cx="13.6" cy="12" r="1.3" fill="var(--bg)"/><path d="M3 8 L6.5 12 L3 16" stroke="var(--bg)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></symbol>
+      <symbol id="i-ai" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="3" fill="currentColor"/><circle cx="8.5" cy="10" r="1.6" fill="var(--bg)"/><circle cx="15.5" cy="10" r="1.6" fill="var(--bg)"/><rect x="3" y="19" width="6" height="2" fill="currentColor"/><rect x="15" y="19" width="6" height="2" fill="currentColor"/></symbol>
+      <symbol id="i-random" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="currentColor"/><circle cx="8.5" cy="8.5" r="1.5" fill="var(--bg)"/><circle cx="15.5" cy="8.5" r="1.5" fill="var(--bg)"/><circle cx="8.5" cy="15.5" r="1.5" fill="var(--bg)"/><circle cx="15.5" cy="15.5" r="1.5" fill="var(--bg)"/></symbol>
+      <symbol id="i-reset" viewBox="0 0 24 24"><path d="M12 5 V2 L7 6 l5 4 V7 a5 5 0 1 1 -5 5 H5 a7 7 0 1 0 7-7z" fill="currentColor"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></g></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10z" fill="currentColor"/></symbol>
+      <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 5l7 9H5z" fill="currentColor"/></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 19l7-9H5z" fill="currentColor"/></symbol>
+      <symbol id="i-left" viewBox="0 0 24 24"><path d="M5 12l9-7v14z" fill="currentColor"/></symbol>
+      <symbol id="i-right" viewBox="0 0 24 24"><path d="M19 12l-9-7v14z" fill="currentColor"/></symbol>
+      <symbol id="i-wait" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1.5" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1.5" fill="currentColor"/></symbol>
+      <symbol id="i-engage" viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6z" fill="currentColor"/></symbol>
+      <symbol id="i-exitdoor" viewBox="0 0 24 24"><rect x="8" y="4" width="8" height="16" rx="2" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="var(--bg)"/><path d="M3 9l3 3-3 3" stroke="var(--bg)" stroke-width="2" fill="none" stroke-linecap="round"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6z" fill="currentColor"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     </defs>
   </svg>
 
   <div class="topbar">
     <div class="brand">Adventure <span class="sub">· learn the code</span></div>
     <div class="modes">
-      <button id="btnPlay" class="btn on">▶ Play</button>
-      <button id="btnAI" class="btn">🤖 Watch AI</button>
+      <button id="btnPlay" class="btn on"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg><span>Play</span></button>
+      <button id="btnAI" class="btn"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ai"/></svg><span>Watch AI</span></button>
     </div>
     <div class="spacer"></div>
-    <label class="lbl" for="levelSel">Level</label>
-    <select id="levelSel" aria-label="Level"></select>
-    <button id="btnRandom" class="btn" title="Generate a random level (JS port)">🎲 Random</button>
-    <button id="btnReset" class="btn" title="Reset current level">⟲ Reset</button>
+    <div class="ctl"><label class="lbl" for="levelSel">Level</label><select id="levelSel" aria-label="Level"></select></div>
+    <button id="btnRandom" class="btn icon-only" title="Generate a random level (JS port)" aria-label="Random level"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-random"/></svg></button>
+    <button id="btnReset" class="btn icon-only" title="Reset current level" aria-label="Reset"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-reset"/></svg></button>
     <div class="sep"></div>
     <button id="btnStep" class="btn" title="Advance one turn">Step</button>
-    <button id="btnRun" class="btn primary">Run ▸</button>
-    <label class="lbl" for="speed">speed</label>
-    <select id="speed" aria-label="Speed"><option value="700">0.7s</option><option value="400" selected>0.4s</option><option value="180">0.18s</option><option value="60">fast</option></select>
-    <button id="btnTheme" class="btn icon" title="Toggle light / dark theme" aria-label="Toggle theme">🌙</button>
+    <button id="btnRun" class="btn primary">Run <svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg></button>
+    <div class="ctl"><label class="lbl" for="speed">speed</label><select id="speed" aria-label="Speed"><option value="700">0.7s</option><option value="400" selected>0.4s</option><option value="180">0.18s</option><option value="60">fast</option></select></div>
+    <button id="btnTheme" class="btn icon-only" title="Toggle light / dark theme" aria-label="Toggle theme"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg></button>
   </div>
 
   <div class="layout" id="layout">
@@ -335,33 +368,44 @@
       </div>
       <div class="touchpad no-print">
         <div class="dpad" role="group" aria-label="Directional pad">
-          <span></span><button class="padbtn" data-d="MOVE_NORTH" aria-label="Move north">▲</button><span></span>
-          <button class="padbtn" data-d="MOVE_WEST" aria-label="Move west">◀</button>
-          <button class="padbtn center" data-d="WAIT" aria-label="Wait">●</button>
-          <button class="padbtn" data-d="MOVE_EAST" aria-label="Move east">▶</button>
-          <span></span><button class="padbtn" data-d="MOVE_SOUTH" aria-label="Move south">▼</button><span></span>
+          <span></span><button class="padbtn" data-d="MOVE_NORTH" aria-label="Move north"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-up"/></svg></button><span></span>
+          <button class="padbtn" data-d="MOVE_WEST" aria-label="Move west"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-left"/></svg></button>
+          <button class="padbtn center" data-d="WAIT" aria-label="Wait"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-wait"/></svg></button>
+          <button class="padbtn" data-d="MOVE_EAST" aria-label="Move east"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-right"/></svg></button>
+          <span></span><button class="padbtn" data-d="MOVE_SOUTH" aria-label="Move south"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-down"/></svg></button><span></span>
         </div>
         <div class="actions" role="group" aria-label="Actions">
-          <button class="actbtn" data-a="COLLECT">💎 Collect<small>C</small></button>
-          <button class="actbtn" data-a="ENGAGE">⚔ Engage<small>E</small></button>
-          <button class="actbtn" data-a="WAIT">⏸ Wait<small>Space</small></button>
-          <button class="actbtn" data-a="EXIT">🚪 Exit<small>X</small></button>
+          <button class="actbtn" data-a="COLLECT"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-artifact"/></svg> Collect<small>C</small></button>
+          <button class="actbtn" data-a="ENGAGE"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-engage"/></svg> Engage<small>E</small></button>
+          <button class="actbtn" data-a="WAIT"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-wait"/></svg> Wait<small>Space</small></button>
+          <button class="actbtn" data-a="EXIT"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-exitdoor"/></svg> Exit<small>X</small></button>
         </div>
       </div>
       <div id="msg">Use arrow keys / WASD to move. <b>C</b> collect · <b>E</b> engage · <b>Space</b> wait · <b>X</b> exit.</div>
     </div>
 
     <div class="card rightpanel">
-      <div class="tabs" role="tablist">
-        <button class="tab on" role="tab" data-t="story">Story &amp; actions</button>
-        <button class="tab" role="tab" data-t="flow">Data flow</button>
-        <button class="tab" role="tab" data-t="explain">Explain it back</button>
-        <button class="tab" role="tab" data-t="edge">Edge cases</button>
-        <button class="tab" role="tab" data-t="ref">Reference</button>
-        <button class="tab" role="tab" data-t="log">AI log</button>
-        <button class="tab" role="tab" data-t="live">Live code</button>
-        <button class="tab" role="tab" data-t="code">Read code</button>
-        <button class="tab" role="tab" data-t="present">Team</button>
+      <div class="groupbar" role="tablist" aria-label="Sections">
+        <button class="gbtn on" data-g="play" role="tab">Play</button>
+        <button class="gbtn" data-g="learn" role="tab">Learn</button>
+        <button class="gbtn" data-g="test" role="tab">Test yourself</button>
+      </div>
+      <div class="subtabs">
+        <div class="subrow" data-g="play">
+          <button class="tab on" role="tab" data-t="story">Story &amp; actions</button>
+          <button class="tab" role="tab" data-t="log">AI log</button>
+          <button class="tab" role="tab" data-t="live">Live code</button>
+        </div>
+        <div class="subrow" data-g="learn" hidden>
+          <button class="tab" role="tab" data-t="flow">Data flow</button>
+          <button class="tab" role="tab" data-t="code">Read code</button>
+          <button class="tab" role="tab" data-t="ref">Reference</button>
+          <button class="tab" role="tab" data-t="present">Team</button>
+        </div>
+        <div class="subrow" data-g="test" hidden>
+          <button class="tab" role="tab" data-t="explain">Explain it back</button>
+          <button class="tab" role="tab" data-t="edge">Edge cases</button>
+        </div>
       </div>
 
       <div class="tpanel on" id="t-story"><div id="story"></div></div>
@@ -993,7 +1037,7 @@ function applyAction(w,s,act,log){
   }
   if(act==="WAIT"){ advanceTurn(s,log,act,"wait one turn"); return; }
   if(act==="EXIT"){
-    if(s.r===world.exit[0]&&s.c===world.exit[1]){ s.win=true; s.over=true; (log||[]).push({a:"win",t:act,why:"reached the exit! 🎉"}); }
+    if(s.r===world.exit[0]&&s.c===world.exit[1]){ s.win=true; s.over=true; (log||[]).push({a:"win",t:act,why:"reached the exit!"}); }
     else { (log||[]).push({a:"blocked",t:act,why:"you're not on the exit tile"}); }
     return;
   }
@@ -1094,6 +1138,9 @@ let scrubDelta=0;
 
 const ICO_ID={ player:"i-agent", exit:"i-exit", start:"i-start", artifact:"i-artifact", enemy:"i-enemy", patrol:"i-patrol" };
 function icon(id, st){ return `<span class="ico" ${st?`style="${st}"`:""}><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#${ICO_ID[id]}"/></svg></span>`; }
+function iconTiny(id){ return `<svg class="tiny" viewBox="0 0 24 24" aria-hidden="true"><use href="#${ICO_ID[id]}"/></svg>`; }
+function svgUse(sym, cls){ return `<svg class="${cls||"tiny"}" viewBox="0 0 24 24" aria-hidden="true"><use href="#${sym}"/></svg>`; }
+function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 /* ---- ghost trail layer: each patrol's upcoming positions, positioned by % ---- */
 function ghostPct(r,c){ return {left:(c*100/world.cols)+"%", top:(r*100/world.rows)+"%", width:(100/world.cols)+"%", height:(100/world.rows)+"%"}; }
@@ -1126,13 +1173,16 @@ function renderDeadline(){
   const remain=Math.max(0, world.maxTurns-state.turn);
   const pct=Math.round(remain/world.maxTurns*100);
   document.getElementById("deadline").style.width=pct+"%";
-  document.getElementById("dlnow").textContent="turn "+state.turn;
-  document.getElementById("dlmax").textContent=world.maxTurns;
+  document.getElementById("dlnow").textContent="turns left "+remain;
+  document.getElementById("dlmax").textContent="of "+world.maxTurns;
   document.getElementById("deadlinewrap").classList.toggle("urgent", pct<=25);
 }
 
 function render(pathCells){
-  boardEl.style.gridTemplateColumns=`repeat(${world.cols}, minmax(0,1fr))`;
+  boardEl.style.gridTemplateColumns=`repeat(${world.cols}, minmax(24px, 1fr))`;
+  let cellPx=32;
+  if(boardEl.clientWidth>0){ const avail=boardEl.clientWidth-16; cellPx=(avail-(world.cols-1)*2)/world.cols; }
+  boardEl.style.setProperty("--cellsize", Math.max(24,Math.round(cellPx))+"px");
   boardEl.innerHTML="";
   const patOcc=new Set();
   for(const p of world.patrols){ const q=patrolPos(p,state.turn); patOcc.add(key(q[0],q[1])); }
@@ -1165,18 +1215,20 @@ function message(txt,cls){ msgEl.textContent=txt; msgEl.className=cls||""; }
 /* ===================== STORY PANEL (play instructions + world each) ===================== */
 const ACTION_HELP = [
   ["Move","Arrow keys / WASD — N/S/E/W. One turn per move. You can't walk through walls, a patrol (now or next turn), or an undefeated enemy."],
-  ["Collect (C)","When standing on a 💎. Adds its value to your score. Costs one turn."],
-  ["Engage (E)","When next to a 👾 (Manhattan distance 1). Defeats it, subtracts its penalty from your score. Costs one turn. You must do this before you can walk over that enemy."],
+  ["Collect (C)","When standing on a "+iconTiny("artifact")+". Adds its value to your score. Costs one turn."],
+  ["Engage (E)","When next to a "+iconTiny("enemy")+" (Manhattan distance 1). Defeats it, subtracts its penalty from your score. Costs one turn. You must do this before you can walk over that enemy."],
   ["Wait (Space)","Do nothing for one turn — used to time patrols. (The AI uses this a lot.)"],
-  ["Exit (X)","Only works when you're standing on the 🏆. That's how you win."],
+  ["Exit (X)","Only works when you're standing on the "+iconTiny("exit")+". That's how you win."],
 ];
 function renderStory(){
   const el=document.getElementById("story");
-  let h=`<div class="guide"><h4>What you're playing</h4><p>The <b>character</b> (${"character.py"}) is you, the player. The grid is the <b>terrain</b> (${"terrain_generator.py"}). Gems and monsters are placed by the <b>level generator</b> (${"level_generator.py"}). The moving ghosts are <b>patrols</b> — the AI in ${"controller.py"} exists mainly to dodge and time those.</p>`;
-  h+=`<h4>Your actions</h4><ul>`;
-  for(const [t,d] of ACTION_HELP) h+=`<li><b>${t}</b> — ${d}</li>`;
-  h+=`</ul><h4>The goal</h4><p>Collect as much score as you can and reach the exit before turn ${world.maxTurns}. Engaging enemies costs points, so weigh it against going around. Patrols are never killable — you can only time them. Use <b>Watch AI</b> to see the Dijkstra planner solve the same board step by step.</p>`;
-  h+=`<h4>A note on fidelity</h4><p class="muted">The seven baked levels are genuine output of the real Python generators. The <b>Random</b> button uses a JavaScript port (a <code>mulberry32</code> PRNG) — it reproduces the algorithms' shapes but not Python's exact random sequences. Watch AI is a port of controller.py verified against the real code on the straight-path level.</p></div>`;
+  let h=`<div class="guide"><p>The <b>character</b> (${"character.py"}) is you, the player. The grid is the <b>terrain</b> (${"terrain_generator.py"}). Gems and monsters are placed by the <b>level generator</b> (${"level_generator.py"}). The moving ghosts are <b>patrols</b> — the AI in ${"controller.py"} exists mainly to dodge and time those.</p>`;
+  h+=`<details class="howto" open><summary>How to play</summary>`;
+  h+=`<p>Collect as much score as you can and reach the exit before turn ${world.maxTurns}. Engaging enemies costs points, so weigh it against going around. Patrols are never killable — you can only time them. Use <b>Watch AI</b> to see the Dijkstra planner solve the same board step by step.</p>`;
+  h+=`<div class="ctlgrid">`;
+  for(const [t,d] of ACTION_HELP) h+=`<div><b>${t}</b><br><span class="muted">${d}</span></div>`;
+  h+=`</div></details>`;
+  h+=`<details class="howto"><summary>Fidelity note</summary><p class="muted">The seven baked levels are genuine output of the real Python generators. The <b>Random</b> button uses a JavaScript port (a <code>mulberry32</code> PRNG) — it reproduces the algorithms' shapes but not Python's exact random sequences. Watch AI is a port of controller.py verified against the real code on the straight-path level.</p></details></div>`;
   el.innerHTML=h;
 }
 
@@ -1196,7 +1248,7 @@ function setMode(m){
   mode=m;
   document.getElementById("btnPlay").classList.toggle("on",mode==="play");
   document.getElementById("btnAI").classList.toggle("on",mode==="ai");
-  document.getElementById("btnRun").textContent = mode==="ai"?"Run ▸":"Run AI ▸";
+  document.getElementById("btnRun").innerHTML = (mode==="ai"?"Run AI ":"Run ")+'<svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-play"/></svg>';
   stopAI();
   if(mode==="ai"){ startAI(); } else { render(); }
 }
@@ -1216,7 +1268,7 @@ function buildLiveCode(){
 }
 function setLive(a,label){
   liveRange=a;
-  if(label!==undefined) document.getElementById("liveReason").textContent="⚡ "+label;
+  if(label!==undefined) document.getElementById("liveReason").innerHTML=svgUse("i-bolt")+" "+escHtml(label);
   const lines=Array.from(document.querySelectorAll("#liveCode .lc"));
   lines.forEach(el=>el.classList.remove("hl"));
   const snipEl=document.getElementById("liveSnippet");
@@ -1335,7 +1387,7 @@ async function runAIStep(){
   setLive(LIVE_PHASES.returnAction,"return the chosen action (first step of the plan)");
   setLiveState();
   render(aiPathCells());
-  if(state.win) message("Watch AI reached the exit! 🎉 Score "+state.score,"ok");
+  if(state.win) message("Watch AI reached the exit! Score "+state.score,"ok");
   else if(state.over) message("Out of turns before reaching the exit → timeout.","err");
   else if(needsPlan && !plan) message("No reachable path to the exit from here — likely a patrol covers the only route.","err");
   else message("");
@@ -1377,7 +1429,7 @@ function doPlay(act){
   const log=[];
   applyAction(world,state,act,log);
   if(log.length) message(log[0].why, log[0].a==="blocked"?"err":(state.win?"ok":""));
-  if(state.win){ message("You reached the exit! 🎉 Score "+state.score, "ok"); }
+  if(state.win){ message("You reached the exit! Score "+state.score, "ok"); }
   else if(state.over) message("Out of turns. Reach the exit before turn "+world.maxTurns+". Press Reset.", "err");
   render();
 }
@@ -1551,7 +1603,7 @@ const NOTES={
   {from:13,to:14,text:"<b>Dependency injection</b>: the LevelGenerator receives a `TerrainGeneratorContract` (any object with `generate_terrain`). It doesn't make its own — that keeps the two components decoupled and testable."},
   {from:16,to:33,text:"<b>Helpers</b> over your tile list. `_degree_one` returns tiles with exactly one open neighbor — i.e. dead-ends (good start/exit candidates)."},
   {from:35,to:49,text:"<b>Pick start & exit</b>. For a straight/bent path it uses two dead-end tiles. Otherwise: start at the first open tile, then pick an exit whose Manhattan distance falls inside the requested route bounds."},
-  {from:51,to:90,text:"<b>Place artifacts & enemies</b>. It shuffles the tile pool, then pops tiles one by one (so placement is random but deterministic given the seed). Blocked tiles are kept off the endpoints (unless allowed). Value/penalty are rolled within the spec's min–max range. <span class='em'>This is the function that decides exactly where your 💎 and 👾 appear.</span>"},
+  {from:51,to:90,text:"<b>Place artifacts & enemies</b>. It shuffles the tile pool, then pops tiles one by one (so placement is random but deterministic given the seed). Blocked tiles are kept off the endpoints (unless allowed). Value/penalty are rolled within the spec's min–max range. <span class='em'>This is the function that decides exactly where your "+iconTiny("artifact")+" and "+iconTiny("enemy")+" appear.</span>"},
   {from:92,to:108,text:"<b>generate_level</b>: the public entry. Build terrain → open tiles → endpoints → entities → assemble the immutable `LevelDefinition`. That object is what `controller.py` reads as `state.level`."},
  ],
  "controller.py":[
@@ -1833,7 +1885,7 @@ function renderExplain(){
     const qs=EXPLAIN_QS[f];
     const ans=(explainProgress[f]||{});
     const done=qs && Object.keys(ans).length>=qs.length;
-    h+=`<button class="exfile" onclick="pickFile('${f}')"><span class="fname">${f}</span><span class="owner">${TEAM[f].owner}</span><span class="done">${done?"✓":"·"}</span></button>`;
+    h+=`<button class="exfile" onclick="pickFile('${f}')"><span class="fname">${f}</span><span class="owner">${TEAM[f].owner}</span><span class="done">${done?svgUse("i-check","tiny check"):"·"}</span></button>`;
   }
   h+='<div id="exquiz"></div>';
   document.getElementById("explain").innerHTML=h;
@@ -1878,7 +1930,14 @@ function nextQ(){
 }
 function prevQ(){ if(selQ>0){ selQ--; renderQuestion(); } }
 
+const TAB_GROUP={story:"play", log:"play", live:"play", flow:"learn", code:"learn", ref:"learn", present:"learn", explain:"test", edge:"test"};
+function setGroup(g){
+  document.querySelectorAll(".gbtn").forEach(b=>b.classList.toggle("on", b.dataset.g===g));
+  document.querySelectorAll(".subrow").forEach(r=>{ r.hidden = r.dataset.g!==g; });
+}
 function setTab(name){
+  const g=TAB_GROUP[name];
+  if(g) setGroup(g);
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on", t.dataset.t===name));
   document.querySelectorAll(".tpanel").forEach(p=>p.classList.toggle("on", p.id==="t-"+name));
 }
@@ -1959,6 +2018,7 @@ function init(){
   document.querySelectorAll(".padbtn").forEach(b=>b.onclick=()=>doPlay(b.dataset.d||"WAIT"));
   document.querySelectorAll(".actbtn").forEach(b=>b.onclick=()=>doPlay(b.dataset.a));
   document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>setTab(t.dataset.t));
+  document.querySelectorAll(".gbtn").forEach(g=>g.onclick=()=>setGroup(g.dataset.g));
 
   renderCode();
   buildLiveCode();
@@ -1970,7 +2030,8 @@ function init(){
   renderStory();
 }
 function refreshThemeIcon(){
-  const b=document.getElementById("btnTheme"); if(b) b.textContent = document.body.classList.contains("theme-light")?"☀️":"🌙";
+  const b=document.getElementById("btnTheme");
+  if(b) b.innerHTML = document.body.classList.contains("theme-light") ? svgUse("i-sun","bi") : svgUse("i-moon","bi");
 }
 init();
 </script>
