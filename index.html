@@ -3,175 +3,375 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Adventure — learn your code</title>
+<title>Adventure — learn the six src/student components</title>
 <style>
+  /* ============ DESIGN TOKENS (dark default) ============ */
   :root{
-    --bg:#0f1117; --panel:#171b24; --panel2:#1d2230; --line:#2a3142;
-    --text:#e6e9f1; --muted:#9aa3b8; --dim:#6b738a;
-    --accent:#6ee7b7; --accent2:#38bdf8; --warn:#fbbf24; --bad:#f87171;
-    --wall:#313848; --floor:#171b24; --floor2:#1c2230;
+    --bg:#0e1117; --panel:#151a24; --panel2:#1c2331; --line:#2a3346;
+    --text:#e9ecf3; --muted:#aab4c7; --dim:#8a94aa;
+    --accent:#5eead4; --accent2:#38bdf8; --warn:#fbbf24; --bad:#f87171;
+    --good:#34d399;
+    --wall:#2c3448; --floor:#151a24; --floor2:#1b2230;
+    --enemy:#f47171; --patrol:#60a5fa; --artifact:#facc15; --start:#34d399; --exit:#fbbf24;
+    --hlbg:#0e3346; --hlborder:#38bdf8;
+    --shadow:0 8px 24px rgba(0,0,0,.35);
+    --rad:14px;
+  }
+  .theme-light{
+    --bg:#ebeff5; --panel:#ffffff; --panel2:#f1f4f9; --line:#cdd5e3;
+    --text:#18202f; --muted:#46536b; --dim:#5b6880;
+    --accent:#0d8f80; --accent2:#0369a1; --warn:#a16207; --bad:#c22d2d; --good:#059669;
+    --wall:#c6cede; --floor:#fbfcfe; --floor2:#edf1f7;
+    --enemy:#c22d2d; --patrol:#2563eb; --artifact:#b45309; --start:#059669; --exit:#b45309;
+    --hlbg:#dff1fb; --hlborder:#0369a1;
+    --shadow:0 8px 24px rgba(15,23,42,.12);
   }
   *{box-sizing:border-box; margin:0; padding:0}
-  body{background:var(--bg); color:var(--text); font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; min-height:100vh}
-  .wrap{max-width:1120px; margin:0 auto; padding:18px 18px 60px}
-  header{border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:16px}
-  header h1{font-size:22px; letter-spacing:.3px}
-  header h1 .sub{color:var(--accent)}
-  header p{color:var(--muted); font-size:13.5px; margin-top:4px; max-width:760px; line-height:1.5}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg); color:var(--text); font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; min-height:100vh; font-size:15px; line-height:1.5}
+  :focus-visible{outline:2px solid var(--accent2); outline-offset:2px; border-radius:4px}
+  code, pre, .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .wrap{max-width:1160px; margin:0 auto; padding:14px 16px 70px}
 
-  /* toolbar */
-  .toolbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px}
-  .btn{background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:8px;
-       padding:7px 12px; font-size:13.5px; cursor:pointer; transition:background .12s, border .12s; font-weight:550}
-  .btn:hover{border-color:var(--accent2)}
-  .btn.on{background:#123a33; border-color:var(--accent); color:var(--accent)}
-  .btn.primary{background:var(--accent); color:#07120e; border-color:var(--accent)}
-  .btn.primary:hover{background:#7df2c7}
-  .btn:disabled{opacity:.38; cursor:not-allowed}
-  select{background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:7px 8px; font-size:13.5px}
-  .sep{width:1px; height:22px; background:var(--line); margin:0 2px}
-  label.lbl{font-size:12.5px; color:var(--muted)}
+  /* ============ TOP BAR (compact) ============ */
+  .topbar{position:sticky; top:0; z-index:30; display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+          background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px);
+          border:1px solid var(--line); border-radius:12px; padding:8px 12px; margin-bottom:14px;
+          box-shadow:var(--shadow)}
+  .brand{font-size:16px; font-weight:700; letter-spacing:.2px; margin-right:4px; white-space:nowrap}
+  .brand .sub{color:var(--accent); font-weight:600; font-size:13px}
+  .modes{display:flex; gap:6px}
+  .spacer{flex:1}
+  .btn{background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:9px;
+       padding:8px 13px; font-size:14px; cursor:pointer; transition:background .12s, border-color .12s, transform .06s; font-weight:550; min-height:36px}
+  .btn:hover:not(:disabled){border-color:var(--accent2)}
+  .btn:active:not(:disabled){transform:translateY(1px)}
+  .btn.on{background:color-mix(in srgb, var(--accent) 14%, var(--panel2)); border-color:var(--accent); color:var(--accent)}
+  .btn.primary{background:var(--accent); color:#08110f; border-color:var(--accent)}
+  .btn.primary:hover:not(:disabled){filter:brightness(1.06)}
+  .theme-light .btn.primary{color:#ffffff}
+  .btn:disabled{opacity:.4; cursor:not-allowed}
+  .btn.icon{min-width:38px; padding:8px 10px}
+  select{background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:8px 8px; font-size:14px; min-height:36px}
+  .sep{width:1px; height:24px; background:var(--line); margin:0 2px}
+  label.lbl{font-size:13px; color:var(--muted); white-space:nowrap}
 
-  .layout{display:grid; grid-template-columns:minmax(420px,1fr) minmax(340px,1fr); gap:16px; align-items:start}
-  @media (max-width:880px){ .layout{grid-template-columns:1fr} }
+  /* ============ LAYOUT ============ */
+  .layout{display:grid; grid-template-columns:minmax(430px,1.05fr) minmax(360px,1fr); gap:16px; align-items:start}
+  .layout.wide{grid-template-columns:1fr}
+  .layout.wide .boardcol{display:none}
+  @media (max-width:920px){ .layout{grid-template-columns:1fr} }
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--rad); padding:14px 16px; box-shadow:var(--shadow)}
+  .card h2{font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin-bottom:10px; font-weight:650}
+  .boardhead{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+  .boardhead h2{margin-bottom:0}
 
-  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px}
-  .card h2{font-size:14px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin-bottom:10px; font-weight:600}
-
-  /* board */
-  #boardHost{display:flex; justify-content:center}
+  /* ============ BOARD ============ */
+  #boardHost{position:relative; display:flex; justify-content:center}
   #board{display:grid; gap:2px; padding:8px; background:var(--panel2); border-radius:10px; border:1px solid var(--line)}
   .cell{width:100%; aspect-ratio:1/1; border-radius:3px; display:flex; align-items:center; justify-content:center; position:relative; line-height:1}
   .cell.wall{background:var(--wall)}
   .cell.floor{background:var(--floor)}
   .cell.floor.alt{background:var(--floor2)}
-  .cell .ico{font-size:1em}
-  .cell .badge{position:absolute; bottom:-1px; right:-1px; font-size:.5em; background:rgba(0,0,0,.72); color:#cfe3ff; padding:0 3px; border-radius:5px; font-weight:700}
-  .cell .badge.pblue{color:#cfe3ff}
-  .cell .badge.pred{color:#ffc9c9}
+  .cell .ico{width:84%; height:84%; display:flex; align-items:center; justify-content:center; color:var(--text)}
+  .cell .ico svg{width:100%; height:100%; display:block}
+  .cell .badge{position:absolute; bottom:-2px; right:-2px; font-size:.48em; background:rgba(0,0,0,.78); color:#fff; padding:1px 4px; border-radius:6px; font-weight:700; line-height:1.25}
   .cell.dim{opacity:.35}
   .cell.hl{outline:2px solid var(--accent2); outline-offset:-1px}
-  .cell.path{background:#1f2a3a}
-  .cell.path .ico{opacity:.25}
-  .cell.start{background:#123a33}
-  .cell.exit{background:#3a2f12}
+  .cell.path{background:color-mix(in srgb, var(--accent2) 16%, var(--floor))}
+  .cell.start{background:color-mix(in srgb, var(--start) 26%, var(--floor))}
+  .cell.exit{background:color-mix(in srgb, var(--exit) 24%, var(--floor))}
+  .cell.explored{background:color-mix(in srgb, var(--accent) 9%, var(--floor))}
+  .cell.frontier{outline:1px dashed var(--accent2); outline-offset:-2px}
+  .cell .valpop{position:absolute; left:50%; top:40%; transform:translateX(-50%); font-weight:800; font-size:.72em; pointer-events:none}
+  /* ghost trail overlay (inside #boardHost) */
+  .trailLayer{position:absolute; inset:8px; pointer-events:none}
+  .ghost{position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:.28; color:var(--patrol)}
+  .ghost .g{width:74%; height:74%}
+  .ghost .gnum{font-size:11px; font-weight:800; color:var(--patrol); background:color-mix(in srgb, var(--panel) 70%, transparent); border-radius:6px; padding:0 4px; line-height:1.3}
+  .ghost.cur{opacity:1}
+  .ghost.soon{opacity:.6}
+  .ghost .gnum{color:var(--text)}
 
-  #status{margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; font-size:13px}
-  .chip{background:var(--panel2); border:1px solid var(--line); padding:6px 10px; border-radius:9px; color:var(--text)}
-  .chip b{color:var(--accent)}
-  .chip.warn{border-color:var(--warn)} .chip.warn b{color:var(--warn)}
-  #msg{margin-top:10px; font-size:13.5px; color:var(--muted); min-height:20px; line-height:1.5}
-  #msg.err{color:var(--bad)}
-  #msg.ok{color:var(--accent)}
+  /* ============ HUD + DEADLINE ============ */
+  .hud{display:grid; grid-template-columns:repeat(5, auto); gap:8px; margin-top:12px; flex-wrap:wrap}
+  .hud .chip{background:var(--panel2); border:1px solid var(--line); padding:7px 11px; border-radius:10px; font-size:13.5px; color:var(--text); white-space:nowrap; display:inline-flex; gap:5px; align-items:baseline}
+  .hud .chip b{color:var(--accent); font-size:15px}
+  .hud .chip.cost b{color:var(--bad)}
+  .theme-light .hud .chip.cost b{color:#c22d2d}
+  .deadlinewrap{margin-top:9px}
+  .deadlinebar{height:9px; background:var(--panel2); border:1px solid var(--line); border-radius:99px; overflow:hidden}
+  .deadlinebar i{display:block; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent2)); transition:width .25s ease; border-radius:99px}
+  .deadlinewrap.urgent .deadlinebar i{background:var(--bad)}
+  .deadlinelabels{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:3px}
 
-  /* tabs */
-  .tabs{display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap}
-  .tab{background:transparent; color:var(--muted); border:1px solid transparent; border-radius:8px; padding:6px 11px; font-size:13px; cursor:pointer}
-  .tab.on{background:var(--panel2); color:var(--text); border-color:var(--line)}
+  /* ============ SCRUBBER + TRAIL CONTROLS ============ */
+  .scrubrow{display:flex; align-items:center; gap:8px; margin-top:10px; font-size:13px; color:var(--muted)}
+  .scrubrow input[type=range]{flex:1; accent-color:var(--accent); min-height:24px; cursor:pointer}
+  .scrubrow output{font-weight:700; color:var(--text); min-width:52px; text-align:center}
+
+  /* ============ TOUCH PAD ============ */
+  .touchpad{margin-top:12px; display:grid; gap:12px}
+  .dpad{display:grid; grid-template-columns:repeat(3, 64px); gap:6px; justify-content:center}
+  .dpad .padbtn{width:64px; height:56px; font-size:20px; border-radius:12px; background:var(--panel2); color:var(--text); border:1px solid var(--line); cursor:pointer}
+  .dpad .padbtn:hover{border-color:var(--accent2)}
+  .dpad .padbtn:active{background:var(--accent); color:#08110f}
+  .dpad .padbtn.center{font-size:13px; color:var(--muted)}
+  .actions{display:grid; grid-template-columns:repeat(4, 1fr); gap:8px}
+  .actions .actbtn{min-height:48px; font-size:14px; font-weight:650; border-radius:12px; background:var(--panel2); color:var(--text); border:1px solid var(--line); cursor:pointer; padding:6px 4px}
+  .actions .actbtn:hover{border-color:var(--accent2)}
+  .actions .actbtn:active{background:var(--accent); color:#08110f}
+  .actions .actbtn small{display:block; font-size:11px; font-weight:500; color:var(--muted)}
+  .theme-light .actions .actbtn:active{color:#fff}
+
+  /* ============ MSG ============ */
+  #msg{margin-top:10px; font-size:14px; color:var(--muted); min-height:22px; line-height:1.5}
+  #msg.err{color:var(--bad); font-weight:600}
+  #msg.ok{color:var(--accent); font-weight:600}
+
+  /* ============ TABS / PANELS ============ */
+  .tabs{display:flex; gap:5px; margin-bottom:12px; flex-wrap:wrap}
+  .tab{background:transparent; color:var(--muted); border:1px solid transparent; border-radius:8px; padding:7px 11px; font-size:13.5px; cursor:pointer; min-height:34px}
+  .tab.on{background:var(--panel2); color:var(--text); border-color:var(--line); font-weight:600}
   .tpanel{display:none}
   .tpanel.on{display:block}
 
-  /* log */
-  #log{max-height:360px; overflow:auto; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; line-height:1.6}
-  #log .ln{color:var(--accent); margin-right:8px}
-  #log .la{color:var(--accent2)}
+  /* ============ LOG ============ */
+  #log{max-height:420px; overflow:auto; font-size:13.5px; line-height:1.65}
+  #log .ln{color:var(--accent); margin-right:8px; font-weight:700}
+  #log .la{color:var(--accent2); font-family:ui-monospace,monospace}
   #log .why{color:var(--muted)}
   #log .dead{color:var(--bad)}
 
-  /* code */
-  .section{margin-bottom:18px}
-  .section h3{font-size:14px; margin-bottom:2px}
+  /* ============ CODE ============ */
+  .section{margin-bottom:20px}
+  .section h3{font-size:15px; margin-bottom:3px}
   .section h3 .f{color:var(--accent2); font-family:ui-monospace,monospace}
-  .section .blurb{color:var(--muted); font-size:12.8px; margin-bottom:8px; line-height:1.5}
-  pre.code{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px 12px;
-           overflow-x:auto; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.3px; line-height:1.55; color:#d7dce8}
-  .codeln{color:var(--dim); user-select:none}
-  #liveCode .lc{display:block; white-space:pre; padding:0 6px; border-radius:4px; transition:background .12s}
-  #liveCode .lc.hl{background:#0e3346; color:#dff3ff; box-shadow:inset 3px 0 0 var(--accent2)}
-  #liveCode .lc.hl .codeln{color:#7fd7e8}
-  #liveCode{font-size:13.5px}
-  .snipLabel{font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin:6px 0 4px; font-weight:600}
-  pre.code.snippet{font-size:17px; line-height:1.55; max-height:420px; overflow:auto}
-  pre.code.snippet .lc{display:block; white-space:pre; padding:0 8px; border-radius:5px; background:#0e3346; color:#dff3ff; box-shadow:inset 4px 0 0 var(--accent2)}
-  pre.code.snippet .lc .codeln{color:#7fd7e8}
-  .fulldetails summary{cursor:pointer; color:var(--accent2); font-size:12.5px; margin:10px 0 4px; user-select:none}
+  .section .blurb{color:var(--muted); font-size:13.8px; margin-bottom:8px; line-height:1.5}
+  pre.code{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+           overflow-x:auto; font-size:14px; line-height:1.55; color:var(--text)}
+  .section pre.code .cl{display:block}
+  .section pre.code .cl.hl{background:var(--hlbg); box-shadow:inset 3px 0 0 var(--hlborder)}
+  .codeln{color:var(--dim); user-select:none; display:inline-block; min-width:2.4em; margin-right:8px}
+  #liveCode{font-size:14px}
+  #liveCode .lc{display:block; white-space:pre; padding:1px 6px; border-radius:4px; transition:background .3s ease, box-shadow .3s ease}
+  #liveCode .lc.hl{background:var(--hlbg); color:var(--text); box-shadow:inset 3px 0 0 var(--hlborder)}
+  #liveCode .lc.hl .codeln{color:var(--hlborder)}
+  .snipLabel{font-size:12px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin:8px 0 4px; font-weight:700}
+  pre.code.snippet{font-size:16px; line-height:1.6; max-height:440px; overflow:auto}
+  pre.code.snippet .lc{display:block; white-space:pre; padding:2px 8px; border-radius:5px; background:var(--hlbg); color:var(--text); box-shadow:inset 4px 0 0 var(--hlborder); transition:background .3s ease}
+  pre.code.snippet .lc .codeln{color:var(--hlborder)}
+  .fulldetails summary{cursor:pointer; color:var(--accent2); font-size:13.5px; margin:10px 0 4px; user-select:none}
   .fulldetails[open] summary{margin-bottom:8px}
-  .note{background:#0f2b2a; border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:7px 10px; margin:6px 0 10px;
-        font-size:12.6px; color:#c8d8d4; line-height:1.55}
+  .statechip{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; font-size:13px}
+  .statechip .chip{background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:5px 9px; color:var(--muted)}
+  .statechip .chip b{color:var(--accent); font-family:ui-monospace,monospace}
+
+  .note{background:color-mix(in srgb, var(--accent) 8%, var(--panel)); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:8px 11px; margin:6px 0 10px;
+        font-size:13.5px; color:var(--text); line-height:1.55}
   .note b{color:var(--accent)}
   .note .k{color:var(--accent2); font-family:ui-monospace,monospace}
-  .note.warn{background:#2b2110; border-color:var(--warn); color:#e6d5b8}
+  .note.warn{background:color-mix(in srgb, var(--warn) 10%, var(--panel)); border-color:var(--warn)}
   .note.warn b{color:var(--warn)}
 
-  .guide{margin:0; font-size:13.6px; color:var(--text); line-height:1.65}
-  .guide h4{color:var(--accent); margin:14px 0 6px; font-size:13.5px; text-transform:uppercase; letter-spacing:.4px}
-  .guide p{margin:6px 0}
-  .guide li{margin:4px 0 4px 18px}
-  .guide code{font-family:ui-monospace,monospace; color:var(--accent2); background:var(--panel2); padding:1px 5px; border-radius:5px; font-size:12.6px}
-  .guide .em{color:var(--warn)}
-  table.map{width:100%; border-collapse:collapse; margin:10px 0; font-size:12.8px}
-  table.map th, table.map td{border:1px solid var(--line); padding:6px 8px; text-align:left}
-  table.map th{background:var(--panel2); color:var(--muted); font-weight:600}
+  .guide{margin:0; font-size:14.5px; color:var(--text); line-height:1.65}
+  .guide h4{color:var(--accent); margin:16px 0 6px; font-size:13.5px; text-transform:uppercase; letter-spacing:.4px}
+  .guide h5{color:var(--accent2); margin:12px 0 4px; font-size:14.5px}
+  .guide p{margin:7px 0}
+  .guide li{margin:4px 0 4px 20px}
+  .guide code{font-family:ui-monospace,monospace; color:var(--accent2); background:var(--panel2); padding:1px 5px; border-radius:5px; font-size:13.5px}
+  .guide .em{color:var(--warn); font-weight:600}
+  .guide .muted{color:var(--muted)}
+  table.map{width:100%; border-collapse:collapse; margin:10px 0; font-size:13.5px}
+  table.map th, table.map td{border:1px solid var(--line); padding:7px 9px; text-align:left}
+  table.map th{background:var(--panel2); color:var(--muted); font-weight:650}
   table.map .f{font-family:ui-monospace,monospace; color:var(--accent2)}
 
-  .legend{display:flex; flex-wrap:wrap; gap:10px; font-size:12.5px; color:var(--muted); margin-bottom:10px}
+  .legend{display:flex; flex-wrap:wrap; gap:12px; font-size:13px; color:var(--muted); margin-bottom:10px}
   .legend span{display:inline-flex; align-items:center; gap:5px}
+  .legend svg{width:16px; height:16px}
+  .legend .sw{width:16px; height:16px; display:inline-block; color:var(--text)}
+
+  /* ============ DATA FLOW ============ */
+  .flow{font-family:ui-monospace,monospace; font-size:13px; user-select:none}
+  .flow .node{fill:var(--panel2); stroke:var(--line); stroke-width:1.5; cursor:pointer; transition:fill .15s}
+  .flow .node:hover{fill:var(--accent);}
+  .flow .node.sel{stroke:var(--accent); stroke-width:2.5}
+  .flow .node.lit{fill:color-mix(in srgb, var(--accent) 18%, var(--panel2))}
+  .flow text{font-family:ui-monospace,monospace; fill:var(--text); font-size:12.5px; pointer-events:none}
+  .flow .edge{stroke:var(--line); stroke-width:1.6; fill:none}
+  .flow .edge.lit{stroke:var(--accent2)}
+  .flowdesc{margin-top:10px; font-size:14px; color:var(--text); border-top:1px solid var(--line); padding-top:10px}
+  .flowdesc .f{color:var(--accent2); font-family:ui-monospace,monospace}
+
+  /* ============ EXPLAIN MODE ============ */
+  .exfile{display:flex; align-items:center; gap:10px; padding:11px 12px; border:1px solid var(--line); border-radius:11px; margin-bottom:8px; cursor:pointer; background:var(--panel2); transition:border-color .12s}
+  .exfile:hover{border-color:var(--accent2)}
+  .exfile .fname{font-family:ui-monospace,monospace; color:var(--accent2); font-weight:650; flex:1}
+  .exfile .owner{color:var(--muted); font-size:13px}
+  .exfile .done{color:var(--good); font-weight:700; font-size:14px}
+  .exq{margin:10px 0}
+  .exq .q{font-weight:650; margin-bottom:6px}
+  .exopts{display:grid; gap:6px}
+  .exopt{text-align:left; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--panel); color:var(--text); font-size:14px; cursor:pointer; line-height:1.45}
+  .exopt:hover{border-color:var(--accent2)}
+  .exopt.right{border-color:var(--good); background:color-mix(in srgb, var(--good) 12%, var(--panel))}
+  .exopt.wrong{border-color:var(--bad); background:color-mix(in srgb, var(--bad) 10%, var(--panel))}
+  .exopt:disabled{cursor:default}
+  .exanswer{margin-top:8px; border-left:3px solid var(--accent); background:color-mix(in srgb, var(--accent) 8%, var(--panel)); border-radius:0 8px 8px 0; padding:9px 12px; font-size:14px; line-height:1.6}
+  .exanswer .jump{margin-top:8px}
+  .expick{margin:12px 0; font-size:14px; color:var(--muted)}
+
+  /* ============ EDGE CASES ============ */
+  .edgecard{border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:12px; background:var(--panel)}
+  .edgecard h4{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:14.5px; margin-bottom:6px}
+  .badge-tag{font-size:11.5px; font-weight:700; padding:2px 8px; border-radius:99px; text-transform:uppercase; letter-spacing:.4px}
+  .tag-observed{background:color-mix(in srgb, var(--accent2) 15%, var(--panel)); color:var(--accent2)}
+  .tag-repro{background:color-mix(in srgb, var(--warn) 16%, var(--panel)); color:var(--warn)}
+  .tag-python{background:color-mix(in srgb, var(--bad) 15%, var(--panel)); color:var(--bad)}
+  .edgecard p{font-size:14px; color:var(--text); line-height:1.6}
+  .edgecard .demo{margin-top:8px}
+
+  /* ============ REFERENCE SHEETS ============ */
+  .refcard{border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:16px; background:var(--panel); break-inside:avoid}
+  .refcard h3{font-size:15.5px; margin-bottom:2px}
+  .refcard h3 .f{color:var(--accent2); font-family:ui-monospace,monospace}
+  .refcard .pitch{color:var(--muted); font-size:13.5px; margin-bottom:10px}
+  .refcard .ownerline{font-size:13px; color:var(--muted); margin-bottom:10px}
+  .refcard .ownerline b{color:var(--accent)}
+  .refcard table{width:100%; border-collapse:collapse; font-size:13.5px}
+  .refcard td{padding:6px 8px; border-top:1px solid var(--line); vertical-align:top}
+  .refcard td:first-child{font-weight:650; color:var(--muted); width:96px; white-space:nowrap}
+  .refcard ul{margin:2px 0 0 16px}
+  .refcard li{margin-bottom:2px}
+
+  /* ============ ANIMATIONS ============ */
+  @keyframes pop{0%{transform:scale(.35); opacity:0}70%{transform:scale(1.18); opacity:1}100%{transform:scale(1); opacity:1}}
+  @keyframes slidein{from{transform:translate(var(--dx), var(--dy)); opacity:.25}to{transform:translate(0,0); opacity:1}}
+  @keyframes floatup{0%{transform:translateY(0); opacity:1}100%{transform:translateY(-30px); opacity:0}}
+  @keyframes ringflash{0%{box-shadow:0 0 0 0 color-mix(in srgb, var(--bad) 60%, transparent); background:color-mix(in srgb, var(--bad) 30%, var(--floor))}100%{box-shadow:0 0 0 12px transparent}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+  .anm-pop{animation:pop .28s ease}
+  .anm-slide{animation:slidein .24s ease}
+  .anm-float{animation:floatup .9s ease forwards; color:var(--bad); font-weight:800; z-index:5}
+  .anm-flash{animation:ringflash .4s ease}
+  .anm-shake{animation:shake .32s ease}
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{animation:none !important; transition:none !important}
+    html{scroll-behavior:auto}
+  }
+
+  /* ============ PRINT (ref sheets only) ============ */
+  @media print{
+    body{background:#fff; color:#000; font-size:12pt}
+    .topbar, .boardcol, .tabs, .no-print{display:none !important}
+    .layout{display:block !important}
+    .rightpanel{box-shadow:none; border:none; padding:0}
+    .tpanel{display:none !important}
+    #t-ref{display:block !important}
+    .refcard{border:1px solid #333; page-break-after:always; break-inside:avoid; background:#fff}
+    .refcard:last-child{page-break-after:auto}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header>
-    <h1>Adventure <span class="sub">★</span> learn your code by playing it</h1>
-    <p>This game is a live, playable translation of the six Python components in <code>src/student/</code>.
-       The maps you see were generated by <b>your</b> <code>terrain_generator.py</code> and <code>level_generator.py</code>
-       (real output, captured from the actual code). Play it, or watch the AI from <code>controller.py</code> solve it — then
-       read each file line by line in the <b>Read code</b> tab.</p>
-  </header>
+  <!-- inline SVG sprite set (single style, shape distinguishes enemy vs patrol) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-agent" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="15" rx="3" fill="currentColor"/><rect x="9" y="2" width="1.6" height="3" fill="currentColor"/><circle cx="9.8" cy="1.6" r="1.3" fill="currentColor"/><rect x="8" y="7" width="3" height="3" rx="1" fill="var(--bg)"/><rect x="13" y="7" width="3" height="3" rx="1" fill="var(--bg)"/><rect x="9" y="13" width="6" height="2" rx="1" fill="var(--bg)"/></symbol>
+      <symbol id="i-enemy" viewBox="0 0 24 24"><path d="M12 2.5 L13.9 6 L17.6 5.3 L17 9 L20.5 11 L17 13 L17.6 16.7 L13.9 16 L12 19.5 L10.1 16 L6.4 16.7 L7 13 L3.5 11 L7 9 L6.4 5.3 L10.1 6 Z" fill="currentColor"/><circle cx="9.6" cy="11" r="1.3" fill="var(--bg)"/><circle cx="14.4" cy="11" r="1.3" fill="var(--bg)"/></symbol>
+      <symbol id="i-patrol" viewBox="0 0 24 24"><path d="M5 6 C5 2.8 19 2.8 19 6 L18.6 19 L16 16.4 L13 19 L10 16.4 L7 19 L5.4 16.4 Z" fill="currentColor"/><circle cx="9.8" cy="9.5" r="1.4" fill="var(--bg)"/><circle cx="14.2" cy="9.5" r="1.4" fill="var(--bg)"/></symbol>
+      <symbol id="i-artifact" viewBox="0 0 24 24"><path d="M7 4 H17 L21 10 L12 20 L3 10 Z" fill="currentColor"/><path d="M3 10 H21 L12 20 Z" fill="var(--bg)" opacity=".35"/></symbol>
+      <symbol id="i-start" viewBox="0 0 24 24"><rect x="4" y="3" width="2" height="18" fill="currentColor"/><path d="M6 3 L21 8.5 L6 14 Z" fill="currentColor"/></symbol>
+      <symbol id="i-exit" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="18" rx="2" fill="currentColor"/><circle cx="13.6" cy="12" r="1.3" fill="var(--bg)"/><path d="M3 8 L6.5 12 L3 16" stroke="var(--bg)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </defs>
+  </svg>
 
-  <div class="toolbar">
-    <button id="btnPlay" class="btn on">▶ Play</button>
-    <button id="btnAI" class="btn">🤖 Watch AI</button>
+  <div class="topbar">
+    <div class="brand">Adventure <span class="sub">· learn the code</span></div>
+    <div class="modes">
+      <button id="btnPlay" class="btn on">▶ Play</button>
+      <button id="btnAI" class="btn">🤖 Watch AI</button>
+    </div>
+    <div class="spacer"></div>
+    <label class="lbl" for="levelSel">Level</label>
+    <select id="levelSel" aria-label="Level"></select>
+    <button id="btnRandom" class="btn" title="Generate a random level (JS port)">🎲 Random</button>
+    <button id="btnReset" class="btn" title="Reset current level">⟲ Reset</button>
     <div class="sep"></div>
-    <label class="lbl" for="levelSel">Level:</label>
-    <select id="levelSel"></select>
-    <button id="btnRandom" class="btn">🎲 Random</button>
-    <button id="btnReset" class="btn">⟲ Reset</button>
-    <div class="sep"></div>
-    <button id="btnStep" class="btn">Step</button>
+    <button id="btnStep" class="btn" title="Advance one turn">Step</button>
     <button id="btnRun" class="btn primary">Run ▸</button>
     <label class="lbl" for="speed">speed</label>
-    <select id="speed"><option value="700">0.7s</option><option value="400" selected>0.4s</option><option value="180">0.18s</option><option value="60">fast</option></select>
+    <select id="speed" aria-label="Speed"><option value="700">0.7s</option><option value="400" selected>0.4s</option><option value="180">0.18s</option><option value="60">fast</option></select>
+    <button id="btnTheme" class="btn icon" title="Toggle light / dark theme" aria-label="Toggle theme">🌙</button>
   </div>
 
-  <div class="layout">
-    <div class="card">
-      <h2>Map</h2>
+  <div class="layout" id="layout">
+    <div class="card boardcol">
+      <div class="boardhead"><h2>Map</h2><button id="btnWide" class="btn icon" title="Toggle full-width right panel" aria-label="Toggle full width">⤢</button></div>
       <div class="legend">
-        <span>🟢 start</span><span>🏆 exit</span><span>💎 artifact (+value)</span>
-        <span>👾 enemy (engage to pass)</span><span>👻 patrol (dodge / time it)</span><span>🤖 you</span>
+        <span><span class="sw"><svg viewBox="0 0 24 24"><use href="#i-start"/></svg></span> start</span>
+        <span><span class="sw"><svg viewBox="0 0 24 24"><use href="#i-exit"/></svg></span> exit</span>
+        <span><span class="sw" style="color:var(--artifact)"><svg viewBox="0 0 24 24"><use href="#i-artifact"/></svg></span> artifact (+value)</span>
+        <span><span class="sw" style="color:var(--enemy)"><svg viewBox="0 0 24 24"><use href="#i-enemy"/></svg></span> enemy (engage to pass)</span>
+        <span><span class="sw" style="color:var(--patrol)"><svg viewBox="0 0 24 24"><use href="#i-patrol"/></svg></span> patrol (dodge / time it)</span>
+        <span><span class="sw"><svg viewBox="0 0 24 24"><use href="#i-agent"/></svg></span> you</span>
       </div>
-      <div id="boardHost"><div id="board"></div></div>
-      <div id="status"></div>
+      <div id="boardHost">
+        <div id="board"></div>
+        <div class="trailLayer" id="trailLayer"></div>
+      </div>
+      <div class="hud" id="hud"></div>
+      <div class="deadlinewrap" id="deadlinewrap">
+        <div class="deadlinebar" aria-hidden="true"><i id="deadline"></i></div>
+        <div class="deadlinelabels"><span id="dlnow">turn 0</span><span id="dlmax">60</span></div>
+      </div>
+      <div class="scrubrow no-print">
+        <label for="scrub">patrol preview:</label>
+        <input type="range" id="scrub" min="0" max="6" value="0">
+        <output id="scrubVal" for="scrub">now</output>
+      </div>
+      <div class="touchpad no-print">
+        <div class="dpad" role="group" aria-label="Directional pad">
+          <span></span><button class="padbtn" data-d="MOVE_NORTH" aria-label="Move north">▲</button><span></span>
+          <button class="padbtn" data-d="MOVE_WEST" aria-label="Move west">◀</button>
+          <button class="padbtn center" data-d="WAIT" aria-label="Wait">●</button>
+          <button class="padbtn" data-d="MOVE_EAST" aria-label="Move east">▶</button>
+          <span></span><button class="padbtn" data-d="MOVE_SOUTH" aria-label="Move south">▼</button><span></span>
+        </div>
+        <div class="actions" role="group" aria-label="Actions">
+          <button class="actbtn" data-a="COLLECT">💎 Collect<small>C</small></button>
+          <button class="actbtn" data-a="ENGAGE">⚔ Engage<small>E</small></button>
+          <button class="actbtn" data-a="WAIT">⏸ Wait<small>Space</small></button>
+          <button class="actbtn" data-a="EXIT">🚪 Exit<small>X</small></button>
+        </div>
+      </div>
       <div id="msg">Use arrow keys / WASD to move. <b>C</b> collect · <b>E</b> engage · <b>Space</b> wait · <b>X</b> exit.</div>
     </div>
 
-    <div class="card">
-      <div class="tabs">
-        <button class="tab on" data-t="story">📖 Story &amp; Actions</button>
-        <button class="tab" data-t="log">🗒 AI Log</button>
-        <button class="tab" data-t="live">🧠 Live code</button>
-        <button class="tab" data-t="code">📄 Read code</button>
-        <button class="tab" data-t="guide">🎤 Present</button>
+    <div class="card rightpanel">
+      <div class="tabs" role="tablist">
+        <button class="tab on" role="tab" data-t="story">Story &amp; actions</button>
+        <button class="tab" role="tab" data-t="flow">Data flow</button>
+        <button class="tab" role="tab" data-t="explain">Explain it back</button>
+        <button class="tab" role="tab" data-t="edge">Edge cases</button>
+        <button class="tab" role="tab" data-t="ref">Reference</button>
+        <button class="tab" role="tab" data-t="log">AI log</button>
+        <button class="tab" role="tab" data-t="live">Live code</button>
+        <button class="tab" role="tab" data-t="code">Read code</button>
+        <button class="tab" role="tab" data-t="present">Team</button>
       </div>
 
-      <div class="tpanel on" id="t-story">
-        <div id="story"></div>
-      </div>
-      <div class="tpanel" id="t-log">
-        <div id="log"></div>
-      </div>
+      <div class="tpanel on" id="t-story"><div id="story"></div></div>
+      <div class="tpanel" id="t-flow"><div id="flow"></div></div>
+      <div class="tpanel" id="t-explain"><div id="explain"></div></div>
+      <div class="tpanel" id="t-edge"><div id="edge"></div></div>
+      <div class="tpanel" id="t-ref"><div id="ref"></div></div>
+      <div class="tpanel" id="t-log"><div id="log"></div></div>
       <div class="tpanel" id="t-live">
+        <div class="statechip" id="liveState"></div>
         <div id="liveReason" class="chip" style="margin-bottom:6px; width:100%"></div>
         <div class="snipLabel">Now executing</div>
         <pre class="code snippet" id="liveSnippet"></pre>
@@ -181,7 +381,7 @@
         </details>
       </div>
       <div class="tpanel" id="t-code"></div>
-      <div class="tpanel" id="t-guide"><pre class="guide" id="guideText"></pre></div>
+      <div class="tpanel" id="t-present"><div id="presentText"></div></div>
     </div>
   </div>
 </div>
@@ -751,7 +951,7 @@ function newState(){
     turn:0, r:world.start[0], c:world.start[1],
     collected:new Set(), defeated:new Set(),
     score:0, penalties:0,
-    over:false, win:false, log:[],
+    over:false, win:false, log:[], history:[[world.start[0],world.start[1]]],
   };
 }
 
@@ -800,6 +1000,7 @@ function applyAction(w,s,act,log){
 }
 function advanceTurn(s,log,act,why){ s.turn++; if(s.turn>=world.maxTurns){ s.over=true; } if(why)(log||[]).push({a:act.toLowerCase(),t:act,why}); }
 function advanceLike(s,log,act){ // move branch
+  s.history.push([s.r,s.c]);
   s.turn++; if(s.turn>=world.maxTurns) s.over=true;
   if(log)(log||[]).push({a:act.toLowerCase(),t:act,why:"moved "+act.replace("MOVE_","").toLowerCase()});
 }
@@ -813,7 +1014,8 @@ function staticEnemies(w,s){
   return w.enemies.filter(e=>!s.defeated.has(e.id)&&!patrolIds.has(e.id));
 }
 
-function planPath(w,s){
+function planPath(w,s,trace){
+  if(trace){ trace.order=[]; }
   const limit = w.maxTurns || 9999;
   const startDef = [...s.defeated].sort().join(",");
   const startKey = key(s.r,s.c)+"|"+s.turn+"|"+startDef;
@@ -837,6 +1039,7 @@ function planPath(w,s){
     const [cost,cur]=pending.splice(minI,1)[0];
     if(cost !== dist.get(cur)) continue;            // stale entry → skip
     const curObj=decode(cur);
+    if(trace) trace.order.push([curObj.r,curObj.c]);
     if(curObj.r===world.exit[0]&&curObj.c===world.exit[1]){ goal=cur; break; }
     if(curObj.turn+1>=limit) continue;
     const patrolNow=patrolKeys(w,curObj.turn), patrolNext=patrolKeys(w,curObj.turn+1);
@@ -884,21 +1087,53 @@ function chooseAction(w,s){
 
 /* ===================== RENDER ===================== */
 const boardEl=document.getElementById("board");
-const statusEl=document.getElementById("status");
+const hudEl=document.getElementById("hud");
 const msgEl=document.getElementById("msg");
+let renderExplored=null;
+let scrubDelta=0;
 
-const ICO = {
-  wall:"", floor:"", start:"🟢", exit:"🏆",
-  artifact:"💎", enemy:"👾", patrol:"👻", player:"🤖",
-};
+const ICO_ID={ player:"i-agent", exit:"i-exit", start:"i-start", artifact:"i-artifact", enemy:"i-enemy", patrol:"i-patrol" };
+function icon(id, st){ return `<span class="ico" ${st?`style="${st}"`:""}><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#${ICO_ID[id]}"/></svg></span>`; }
+
+/* ---- ghost trail layer: each patrol's upcoming positions, positioned by % ---- */
+function ghostPct(r,c){ return {left:(c*100/world.cols)+"%", top:(r*100/world.rows)+"%", width:(100/world.cols)+"%", height:(100/world.rows)+"%"}; }
+function renderGhosts(){
+  const layer=document.getElementById("trailLayer"); if(!layer) return;
+  layer.innerHTML="";
+  const maxD=6;
+  for(const p of world.patrols){
+    for(let dd=0; dd<=maxD; dd++){
+      const q=patrolPos(p, state.turn+dd);
+      const g=document.createElement("div");
+      const pc=ghostPct(q[0],q[1]);
+      g.className="ghost"+(dd===scrubDelta?" cur":dd<scrubDelta?" soon":"");
+      g.style.left=pc.left; g.style.top=pc.top; g.style.width=pc.width; g.style.height=pc.height;
+      g.innerHTML=`<span class="g"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-patrol"/></svg></span><span class="gnum">+${dd}</span>`;
+      layer.appendChild(g);
+    }
+  }
+}
+
+function renderHud(){
+  hudEl.innerHTML = `
+    <span class="chip">Turn <b>${state.turn}</b> / ${world.maxTurns}</span>
+    <span class="chip">Score <b>${state.score}</b></span>
+    <span class="chip">Collected <b>${state.collected.size}</b>/${world.artifacts.length}</span>
+    <span class="chip">Defeated <b>${state.defeated.size}</b>/${world.enemies.length}</span>
+    <span class="chip cost">Cost <b>-${state.penalties}</b></span>`;
+}
+function renderDeadline(){
+  const remain=Math.max(0, world.maxTurns-state.turn);
+  const pct=Math.round(remain/world.maxTurns*100);
+  document.getElementById("deadline").style.width=pct+"%";
+  document.getElementById("dlnow").textContent="turn "+state.turn;
+  document.getElementById("dlmax").textContent=world.maxTurns;
+  document.getElementById("deadlinewrap").classList.toggle("urgent", pct<=25);
+}
 
 function render(pathCells){
-  const showPatrols = (mode!=="play"); // keep ghosts visible in AI mode too
-  const cellSize=Math.max(15,Math.floor(560/world.cols));
-  boardEl.style.fontSize=cellSize+"px";
   boardEl.style.gridTemplateColumns=`repeat(${world.cols}, minmax(0,1fr))`;
   boardEl.innerHTML="";
-  const now=patrolKeys(world,state.turn);
   const patOcc=new Set();
   for(const p of world.patrols){ const q=patrolPos(p,state.turn); patOcc.add(key(q[0],q[1])); }
   for(let r=0;r<world.rows;r++){
@@ -907,25 +1142,22 @@ function render(pathCells){
       const kk=key(r,c);
       const isWall=world.grid[r][c]==="#";
       d.className="cell "+(isWall?"wall":((r+c)%2===0?"floor":"floor alt"));
-      let ico="";
-      if((r===state.r&&c===state.c)) ico=ICO.player;
-      else if(kk===key(world.exit[0],world.exit[1])) ico=ICO.exit;
-      else if(kk===key(world.start[0],world.start[1])) ico=ICO.start;
-      else if(world.artifactByKey[kk] && !state.collected.has(world.artifactByKey[kk].id)){ ico=ICO.artifact; }
-      else if(world.enemyByKey[kk] && !state.defeated.has(world.enemyByKey[kk].id)){ ico=ICO.enemy; }
-      else if(patOcc.has(kk)){ ico=ICO.patrol; }
-      if(ico){ d.innerHTML=`<span class="ico">${ico}</span>`; }
-      if(world.artifactByKey[kk] && !state.collected.has(world.artifactByKey[kk].id)){ d.innerHTML+=`<span class="badge pblue">${world.artifactByKey[kk].value}</span>`; }
-      else if(world.enemyByKey[kk] && !state.defeated.has(world.enemyByKey[kk].id)){ d.innerHTML+=`<span class="badge pred">${world.enemyByKey[kk].penalty}</span>`; }
-      if(pathCells && pathCells.has(kk) && !(r===state.r&&c===state.c)){ d.classList.add("path"); }
+      if(!isWall){
+        if(kk===key(world.start[0],world.start[1])) d.classList.add("start");
+        if(kk===key(world.exit[0],world.exit[1])) d.classList.add("exit");
+        if(renderExplored && renderExplored.has(kk)) d.classList.add("explored");
+        if(pathCells && pathCells.has(kk) && !(r===state.r&&c===state.c)) d.classList.add("path");
+      }
+      if(r===state.r&&c===state.c){ d.innerHTML=icon("player"); }
+      else if(kk===key(world.exit[0],world.exit[1])) d.innerHTML=icon("exit","color:var(--exit)");
+      else if(kk===key(world.start[0],world.start[1])) d.innerHTML=icon("start","color:var(--start)");
+      else if(world.artifactByKey[kk] && !state.collected.has(world.artifactByKey[kk].id)){ d.innerHTML=icon("artifact","color:var(--artifact)")+`<span class="badge">${world.artifactByKey[kk].value}</span>`; }
+      else if(world.enemyByKey[kk] && !state.defeated.has(world.enemyByKey[kk].id)){ d.innerHTML=icon("enemy","color:var(--enemy)")+`<span class="badge">${world.enemyByKey[kk].penalty}</span>`; }
+      else if(patOcc.has(kk)) d.innerHTML=icon("patrol","color:var(--patrol)");
       boardEl.appendChild(d);
     }
   }
-  statusEl.innerHTML = `
-    <span class="chip">Turn <b>${state.turn}</b> / ${world.maxTurns}</span>
-    <span class="chip">Score <b>${state.score}</b></span>
-    <span class="chip">Artifacts <b>${state.collected.size}</b>/${world.artifacts.length}</span>
-    <span class="chip">Enemies defeated <b>${state.defeated.size}</b>/${world.enemies.length}</span>`;
+  renderHud(); renderDeadline(); renderGhosts();
 }
 
 function message(txt,cls){ msgEl.textContent=txt; msgEl.className=cls||""; }
@@ -940,10 +1172,11 @@ const ACTION_HELP = [
 ];
 function renderStory(){
   const el=document.getElementById("story");
-  let h=`<div class="guide"><h4>What you're playing</h4><p>You are the <b>character</b> (${"character.py"}). The grid is the <b>terrain</b> (${"terrain_generator.py"}). The gems and monsters were placed by the <b>level generator</b> (${"level_generator.py"}). The moving ghosts are <b>patrols</b> — the AI in ${"controller.py"} exists mainly to dodge and time those.</p>`;
+  let h=`<div class="guide"><h4>What you're playing</h4><p>The <b>character</b> (${"character.py"}) is you, the player. The grid is the <b>terrain</b> (${"terrain_generator.py"}). Gems and monsters are placed by the <b>level generator</b> (${"level_generator.py"}). The moving ghosts are <b>patrols</b> — the AI in ${"controller.py"} exists mainly to dodge and time those.</p>`;
   h+=`<h4>Your actions</h4><ul>`;
   for(const [t,d] of ACTION_HELP) h+=`<li><b>${t}</b> — ${d}</li>`;
-  h+=`</ul><h4>The goal</h4><p>Collect as much score as you can and reach the exit before turn ${world.maxTurns}. Engaging enemies costs points, so weigh it against going around. Patrols are never killable — you can only time them. You can always <b>Watch AI</b> to see how a perfect player solves the same board.</p></div>`;
+  h+=`</ul><h4>The goal</h4><p>Collect as much score as you can and reach the exit before turn ${world.maxTurns}. Engaging enemies costs points, so weigh it against going around. Patrols are never killable — you can only time them. Use <b>Watch AI</b> to see the Dijkstra planner solve the same board step by step.</p>`;
+  h+=`<h4>A note on fidelity</h4><p class="muted">The seven baked levels are genuine output of the real Python generators. The <b>Random</b> button uses a JavaScript port (a <code>mulberry32</code> PRNG) — it reproduces the algorithms' shapes but not Python's exact random sequences. Watch AI is a port of controller.py verified against the real code on the straight-path level.</p></div>`;
   el.innerHTML=h;
 }
 
@@ -1026,17 +1259,68 @@ async function aiLoop(id){
     await runAIStep();
   }
 }
+function prefersReduced(){ try{ return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){ return false; } }
+
+function bfsLen(w,s,blockK){
+  const goal=key(w.exit[0],w.exit[1]);
+  const sk=key(s.r,s.c); if(blockK===sk) return null;
+  const q=[[s.r,s.c]], seen=new Set([sk]); let d=0;
+  while(q.length){
+    const sz=q.length;
+    for(let i=0;i<sz;i++){
+      const [r,c]=q.shift();
+      if(key(r,c)===goal) return d;
+      for(const [dr,dc] of MOVES){
+        const nr=r+dr, nc=c+dc, k2=key(nr,nc);
+        if(isTraversable(w,nr,nc) && k2!==blockK && !seen.has(k2)){ seen.add(k2); q.push([nr,nc]); }
+      }
+    }
+    d++;
+  }
+  return null;
+}
+function engageRationale(w,s,eid){
+  const e=w.enemies.find(x=>x.id===eid); if(!e) return "";
+  const detour=bfsLen(w,s,key(e.r,e.c)), direct=bfsLen(w,s,null);
+  const engageCost=1+e.penalty;
+  let txt=`engage cost = 1 action + ${e.penalty} penalty = ${engageCost}`;
+  if(detour!==null && direct!==null && detour>direct) txt+=`; going around adds ~${detour-direct} moves, so engaging is cheaper`;
+  else if(direct!==null && detour===null) txt+="; there is no route around except through this enemy";
+  return txt;
+}
+function setLiveState(){
+  if(!state) return;
+  const el=document.getElementById("liveState"); if(!el) return;
+  el.innerHTML=`<span class="chip">pos <b>(${state.r},${state.c})</b></span>`+
+    `<span class="chip">turn <b>${state.turn}</b></span>`+
+    `<span class="chip">defeated <b>${[...state.defeated].join(", ")||"none"}</b></span>`;
+}
+
 async function runAIStep(){
   if(state.over) return;
-  const act=chooseAction(world,state);
   const D=delayMs();
+  const act=chooseAction(world,state);
+  const needsPlan=(act.type!=="EXIT" && act.type!=="COLLECT");
+  let plan=null, trace={};
+  if(needsPlan) plan=planPath(world,state,trace);
+  let rat="";
+  if(act.type==="ENGAGE") rat=engageRationale(world,state,act.target);
   if(act.type==="EXIT"){
     setLive(LIVE_PHASES.exit,"standing on the exit → EXIT");
   } else if(act.type==="COLLECT"){
     setLive(LIVE_PHASES.collect,"artifact on this tile and clear of inbound patrol → COLLECT");
   } else {
     setLive(LIVE_PHASES.planSetup,"_plan: build search state (position, turn, defeated-set)");
-    await sleep(D);
+    if(trace.order && trace.order.length && !prefersReduced()){
+      const total=Math.min(trace.order.length,40);
+      const stepN=Math.max(1, Math.round(total/6));
+      for(let i=stepN;i<=total;i+=stepN){
+        await sleep(Math.max(50, D*0.35));
+        renderExplored=new Set(trace.order.slice(0,i).map(p=>key(p[0],p[1])));
+        render(aiPathCells());
+      }
+    }
+    renderExplored=null;
     if(act.type.startsWith("MOVE")) setLive(LIVE_PHASES.move,"expanding a move: wall / patrol-now-next / enemy checks");
     else if(act.type==="ENGAGE") setLive(LIVE_PHASES.engage,"staying put: ENGAGE an adjacent static enemy (1 action + penalty)");
     else setLive(LIVE_PHASES.wait,"staying put: WAIT one turn");
@@ -1045,11 +1329,16 @@ async function runAIStep(){
   const log=[];
   applyAction(world,state,act.type,log);
   const entry=log.length?log[0]:{a:act.type.toLowerCase(),t:act.type,why:""};
-  logLine({a:entry.a, t:(act.type+" "+(act.target||"").replace(/-.*/,"")).trim(), why:entry.why||""});
+  let whyLine=entry.why||"";
+  if(rat) whyLine += (whyLine?" · ":"")+rat;
+  logLine({a:entry.a, t:(act.type+" "+(act.target||"").replace(/-.*/,"")).trim(), why:whyLine});
   setLive(LIVE_PHASES.returnAction,"return the chosen action (first step of the plan)");
+  setLiveState();
   render(aiPathCells());
-  if(state.win) message("The AI reached the exit! 🎉 Score "+state.score,"ok");
-  else if(state.over) message("Out of turns.","err");
+  if(state.win) message("Watch AI reached the exit! 🎉 Score "+state.score,"ok");
+  else if(state.over) message("Out of turns before reaching the exit → timeout.","err");
+  else if(needsPlan && !plan) message("No reachable path to the exit from here — likely a patrol covers the only route.","err");
+  else message("");
 }
 function aiPathCells(){
   const set=new Set();
@@ -1097,7 +1386,9 @@ function doPlay(act){
 function loadLevel(lvl){
   world=buildWorld(lvl); state=newState();
   stopAI(); clearLog();
-  renderStory(); render(); message("");
+  scrubDelta=0; const scr=document.getElementById("scrub"); if(scr) scr.value=0;
+  const out=document.getElementById("scrubVal"); if(out) out.textContent="now";
+  renderStory(); render(); setLiveState(); message("");
 }
 function newLevel(){
   // generate a fresh random level using the JS port of the generators
@@ -1172,7 +1463,7 @@ function nb(r,c){return [[r-1,c],[r+1,c],[r,c-1],[r,c+1]]}
 function straight(rng,rows,cols,target){
   // Guarded port: the real Python raises "empty range" when target exceeds BOTH
   // dimensions (e.g. rows=6, target=24). Here we fall back to the longer axis so
-  // the Random button never crashes the page. See the Present tab.
+  // the Random button never crashes the page. See the Edge cases tab.
   const set=new Set();
   if(cols>=target){ const row=rr(rng,rows), sc=rr(rng,0,cols-target+1); for(let c=sc;c<sc+target;c++) set.add(key(row,c)); }
   else if(rows>=target){ const col=rr(rng,cols), sr=rr(rng,0,rows-target+1); for(let r=sr;r<sr+target;r++) set.add(key(r,col)); }
@@ -1290,7 +1581,7 @@ function renderCode(){
     const noteByEnd={}; for(const n of notes) noteByEnd[n.to]=n;
     src.forEach((line,i)=>{
       const num=i+1;
-      html+=`<span class="codeln">${String(num).padStart(2,"0")}</span> ${line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}\n`;
+      html+=`<span class="cl" data-n="${num}"><span class="codeln">${String(num).padStart(2,"0")}</span> ${line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</span>\n`;
       if(noteByEnd[num]) html+=`</pre><div class="note">${noteByEnd[num].text}</div><pre class="code">`;
     });
     html+=`</pre></div>`;
@@ -1299,54 +1590,351 @@ function renderCode(){
 }
 
 /* ===================== GUIDE (presentation) ===================== */
-const GUIDE = `
-<h4>Why this is a game</h4>
-<p>Everything in ${"src/student/"} is the “brain and world-builders” of an adventure game. The workbench runs your code against hidden test levels; this page shows you the same ideas visibly.</p>
+/* ===================== TEAM + REFERENCE DATA ===================== */
+const FILES=["character.py","artifact.py","enemy.py","terrain_generator.py","level_generator.py","controller.py"];
+const TEAM={
+  "character.py":{owner:"Sanchez", role:"wrapper + integration/testing"},
+  "artifact.py":{owner:"Oepena", role:"artifact wrapper"},
+  "enemy.py":{owner:"Oepena", role:"enemy wrapper"},
+  "terrain_generator.py":{owner:"Gonzaga", role:"terrain generation"},
+  "level_generator.py":{owner:"Rafak", role:"level assembly"},
+  "controller.py":{owner:"Batoy", role:"AI controller"},
+};
+const QUICKREF={
+  "character.py":{
+    pitch:"“A thin, read-only wrapper over a canonical definition — validates once, then locks.”",
+    purpose:"Who the player is. Stores one validated agent_id and exposes it read-only.",
+    inputs:"agent_id: str", outputs:"agent_id property (str)",
+    invariants:["id is non-empty and trimmed","immutable after construction","constructed exactly once per character"],
+    dependencies:"src.api.CharacterDefinition"},
+  "artifact.py":{
+    pitch:"“Same pattern as Character; adds a non-negative point value.”",
+    purpose:"One collectible gem with a value.",
+    inputs:"artifact_id, position: Position, value: int", outputs:"artifact_id, position, value properties",
+    invariants:["value ≥ 0","non-empty id","valid Position","immutable after construction"],
+    dependencies:"src.api.ArtifactDefinition, Position"},
+  "enemy.py":{
+    pitch:"“Identical shape to Artifact; the penalty is what ENGAGE costs you.”",
+    purpose:"One obstacle you may fight; carries the points it costs to engage.",
+    inputs:"enemy_id, position, encounter_penalty: int", outputs:"enemy_id, position, penalty properties",
+    invariants:["encounter_penalty ≥ 0","non-empty id","valid Position","immutable after construction"],
+    dependencies:"src.api.EnemyDefinition"},
+  "terrain_generator.py":{
+    pitch:"“Deterministic map generation — the seed is the entire source of randomness.”",
+    purpose:"Build the walkable maze deterministically from (spec, seed).",
+    inputs:"TerrainGenerationSpec, seed: int", outputs:"Terrain (rows of '.' / '#')",
+    invariants:["same spec+seed ⇒ same terrain, even across fresh instances","all randomness derives from the seed","straight/bent results are connected"],
+    dependencies:"src.api types only"},
+  "level_generator.py":{
+    pitch:"“Composes everything: terrain in, a playable LevelDefinition out, via an injected contract.”",
+    purpose:"Turn terrain + a spec into a full level: start/exit, artifacts, enemies.",
+    inputs:"LevelSpecification, seed: int", outputs:"LevelDefinition",
+    invariants:["start & exit on open tiles","entities kept off endpoints unless allowed","no overlap unless allowed","deterministic from seed"],
+    dependencies:"TerrainGeneratorContract (injected)"},
+  "controller.py":{
+    pitch:"“Dijkstra over (position, turn, defeated) — plans around future patrol positions.”",
+    purpose:"Pick one legal action per turn to reach the exit under the deadline, dodging patrols and optionally engaging enemies.",
+    inputs:"WorldSnapshot, agent_id", outputs:"WorldAction",
+    invariants:["patrol phase = (initial_phase + turn) % len(positions)","never enters a patrol cell now or next turn","cost = actions + encounter penalties"],
+    dependencies:"none (reads only state.level)"},
+};
 
-<h4>The 6 components — what to say about each</h4>
+/* ===================== EDGE CASES (review notes) ===================== */
+const EDGE=[
+  {tag:"reproduced in Python", file:"terrain_generator.py", title:"_straight_path raises “empty range”",
+   text:"When `target` exceeds both rows and columns, `rng.randrange(0, rows - target + 1)` gets an empty range and raises ValueError. On a 6-row board with target 24 that is `randrange(0, -17)`. `_bent_path`'s fallback calls the same helper, so a degenerate BENT spec crashes the same way."},
+  {tag:"observed in code", file:"controller.py", title:"heapq tie-breaks compare (cost, (Position, turn, frozenset))",
+   text:"When two states tie on cost, heapq compares the whole tuple. Position is orderable, but `frozenset` comparison is subset-based — not a total order. It works for our values, yet it's fragile: change either type and tie-breaking silently misbehaves."},
+  {tag:"observed in code", file:"level_generator.py", title:"_pick_endpoints says “route distance” but uses Manhattan",
+   text:"The comment promises a route distance within bounds, but `candidate.manhattan_distance(start)` is used. Manhattan is not true route distance on a maze, so the bounds hold only approximately."},
+  {tag:"observed in code", file:"level_generator.py", title:"_degree_one is O(n²)",
+   text:"It tests membership `(row+dr, column+dc) in open_tiles` where `open_tiles` is a list, so each neighbor lookup scans the whole list."},
+  {tag:"reproduced in the port", file:"controller.py", title:"A patrol covering a 1-wide corridor is impassable",
+   text:"If a patrol's schedule covers the only corridor between start and exit, the agent can never get past it — it can't enter a cell the patrol holds now or next turn. The level becomes unwinnable. The port's buildPatrols stops itself from placing such patrols so the game stays playable."},
+];
+
+/* ===================== EXPLAIN-IT-BACK ===================== */
+const EXPLAIN_QS={
+  "character.py":[
+    {q:"Why does __init__ build a CharacterDefinition first instead of storing the string directly?",
+     opts:["It's required by the project style","So bad ids fail immediately during validation, and the wrapper only stores what the definition already accepted","To make the class intentionally slower","There is no meaningful difference"],
+     correct:1, answer:"The canonical definition centralizes validation (non-empty, trimmed). Constructing it first means an invalid agent_id raises in the constructor — a bad Character can never exist. The wrapper then just copies the validated field.",
+     lines:[5,11]},
+    {q:"What makes `agent_id` read-only from outside the class?",
+     opts:["It's named with an underscore","It's a @property with no setter","The class is frozen","It's declared final"],
+     correct:1, answer:"The @property exposes a getter only; there is no setter, so external code can't mutate it. Combined with storing to a private attribute, the object is effectively immutable.",
+     lines:[13,16]},
+    {q:"What does this class contribute on top of CharacterDefinition?",
+     opts:["It adds sorting","It provides the public, self-documenting interface the game/contract uses, hiding the internal representation","It encrypts the id","Nothing — it's dead weight"],
+     correct:1, answer:"CharacterDefinition is the validated value; Character is the surface the rest of the code talks to. That separation lets the definition evolve without rippling through the game.",
+     lines:[13,16]},
+  ],
+  "artifact.py":[
+    {q:"Where does validation happen, and what does it guarantee?",
+     opts:["In every getter","In ArtifactDefinition — constructed first, so bad id / position / negative value raise immediately","In the host workbench","Validation never happens"],
+     correct:1, answer:"ArtifactDefinition validates at construction: non-empty id, valid Position, value ≥ 0. Because the wrapper builds it in __init__, failures surface immediately rather than being silently clamped.",
+     lines:[9,14]},
+    {q:"Why expose three read-only properties instead of public fields?",
+     opts:["Public fields are forbidden","To give read-only access without allowing mutation — no setters","They are faster","So they can be overridden"],
+     correct:1, answer:"Properties read like fields but have no setter, so a collected artifact's id / position / value can't change after creation.",
+     lines:[16,26]},
+    {q:"What invariant does `value` carry?",
+     opts:["value may be any integer","value ≥ 0, enforced by the definition","value must equal the tile index","negative values are deliberately allowed"],
+     correct:1, answer:"The definition enforces value ≥ 0, so a gem can never subtract from your score.",
+     lines:[9,14]},
+  ],
+  "enemy.py":[
+    {q:"What is `encounter_penalty` in game terms?",
+     opts:["Points gained by defeating","Points subtracted from your score when you ENGAGE this enemy","Enemy health","Chance to miss"],
+     correct:1, answer:"Engaging costs one action plus the penalty; the planner factors it into cost so it weighs fighting vs detouring.",
+     lines:[5,14]},
+    {q:"Why mirror the Artifact structure exactly?",
+     opts:["Reuse and maintainability — the same validated-wrapper pattern, only the meaning of the third field differs","It was required by the linter","Because Enemy extends Artifact","No reason"],
+     correct:0, answer:"Two components that behave identically should look identical; the only difference is semantic (value vs penalty). That makes the codebase easy to read.",
+     lines:[5,14]},
+    {q:"Can an enemy's penalty be negative?",
+     opts:["Yes","No — the definition enforces ≥ 0","Only for patrol enemies","Only for the first enemy"],
+     correct:1, answer:"EnemyDefinition validates encounter_penalty ≥ 0, so engaging can never add points.",
+     lines:[9,14]},
+  ],
+  "terrain_generator.py":[
+    {q:"Why must generate_terrain(spec, seed) be deterministic across fresh instances?",
+     opts:["Because the workbench caches results","So the same seed always yields the same terrain — reproducibility is the contract, and all randomness comes from the seeded Random created inside","Because seeds are ignored","It's not actually required"],
+     correct:1, answer:"The contract says identical inputs must agree across fresh instances. By creating `random.Random(seed)` inside and keeping no shared random state, the output depends only on spec+seed.",
+     lines:[82,113]},
+    {q:"How does _straight_path decide between a horizontal and vertical line?",
+     opts:["Always horizontal","If columns ≥ target it draws horizontal; otherwise vertical — falling back to whichever axis fits","Always vertical","A random coin flip"],
+     correct:1, answer:"It prefers horizontal when the row width fits the target, else uses a vertical line. When neither fits, it hits the empty-range bug (see the Edge cases tab).",
+     lines:[20,28]},
+    {q:"Why does acyclic tree growth prevent cycles?",
+     opts:["It's coincidence","A new cell is only added when it touches exactly one existing open cell, so no loop can close","It forbids all branching","It limits the board size"],
+     correct:1, answer:"Adding a cell that connects to exactly one open neighbor can never connect two separate arms into a cycle — the region stays a tree.",
+     lines:[51,72]},
+    {q:"What does _has_branch enforce, and why only for BRANCHING_TREE?",
+     opts:["It counts walls","It detects degree ≥ 3 cells so the tree actually branches, which that topology demands","It checks connectivity to the exit","It returns the perimeter"],
+     correct:1, answer:"A branching tree must actually branch; _has_branch verifies at least one cell has three open neighbors.",
+     lines:[74,80]},
+  ],
+  "level_generator.py":[
+    {q:"Why does LevelGenerator take a TerrainGeneratorContract instead of making its own?",
+     opts:["To save memory","Dependency injection: it can use any generator implementing the contract, which decouples and makes it testable","Contracts are mandatory everywhere","So it can mutate the terrain"],
+     correct:1, answer:"Receiving the generator (constructor injection) means this component doesn't care which implementation fills the contract — you can swap in a stub for tests. That's the point of the contract type.",
+     lines:[13,14]},
+    {q:"How are start/exit chosen for straight/bent levels?",
+     opts:["Randomly anywhere","From two dead-end tiles (degree-one cells), guaranteeing the ends of the path","At fixed corners","Nearest to the artifacts"],
+     correct:1, answer:"Straight/bent topologies are single paths whose ends are degree-one cells; picking two of those places start/exit at genuine ends.",
+     lines:[35,49]},
+    {q:"What does `allow_entities_on_endpoints` control, and what's the default?",
+     opts:["Whether entities may spawn on start/exit; by default they are kept off both","How many entities spawn","Which seed to use","Whether patrols spawn"],
+     correct:0, answer:"When false (default), the endpoint tiles are removed from the artifact and enemy pools, so nothing sits on start/exit.",
+     lines:[51,90]},
+    {q:"Entities are placed deterministically given the seed — how?",
+     opts:["They're hard-coded","The pools are shuffled with the seeded rng, then popped tile by tile","Using the wall of the day","Placed by the controller"],
+     correct:1, answer:"`rng.shuffle(...)` then popping gives stable placement for a seed, matching the reproducibility story of the terrain generator.",
+     lines:[51,90]},
+  ],
+  "controller.py":[
+    {q:"Why is a patrol's position a pure function of the turn?",
+     opts:["Patrols use random movement","Because each accepted action advances the clock by exactly one, its phase is (initial_phase + turn) % len(positions) — fully predictable in advance","Patrols teleport","Only the host knows positions"],
+     correct:1, answer:"Since the clock advances once per accepted action, a patrol's position at any future turn is a deterministic function of its schedule. That's what lets the planner route around future positions now.",
+     lines:[13,18]},
+    {q:"What is a single search state in _plan?",
+     opts:["Just the position","(position, turn, set of defeated enemies) — turn matters because patrols move with the clock, and the defeated set matters because engagements change the map","(position, score)","(patrol id, turn)"],
+     correct:1, answer:"All three matter: position for where you are, turn for where patrols will be, and the defeated set for which enemies are cleared.",
+     lines:[33,43]},
+    {q:"Why must the destination tile be clear both now and after the move?",
+     opts:["Cosmetic","A patrol occupies a cell at a specific turn; if you step in as it arrives you collide, so both current and next-tick occupancy are checked","To allow two agents","It's not checked"],
+     correct:1, answer:"The move itself takes a turn, so the patrol clock advances. You need the tile free both when you start the move and when you arrive.",
+     lines:[64,83]},
+    {q:"How does the planner decide between ENGAGE and WAIT when staying put?",
+     opts:["Randomly","Only if no patrol is here now or next turn; then ENGAGE is added for adjacent static enemies at cost 1+penalty, and WAIT at cost 1, and Dijkstra picks the cheapest","It always engages","It never waits"],
+     correct:1, answer:"It generates both transitions with their true costs and lets the priority queue choose — that's how fighting vs waiting is decided, by cost.",
+     lines:[84,102]},
+    {q:"What is the priority order in choose_action?",
+     opts:["Move first, always","EXIT if on exit → COLLECT if an uncollected artifact is here and no inbound patrol → else the first step of the plan → fallback WAIT","ENGAGE first","COLLECT before EXIT even on exit"],
+     correct:1, answer:"Those early-outs are cheap correctness wins; the plan handles everything else. The fallback WAIT guarantees a legal action is always returned.",
+     lines:[113,130]},
+  ],
+};
+
+/* ===================== DATA FLOW ===================== */
+const FLOW_NODES=[
+  {id:"seed", label:"seed", kind:"data", x:20, y:48, desc:"An integer chosen by the host — the only source of randomness for everything below.", file:null},
+  {id:"terrain", label:"terrain_generator.py", kind:"file", x:170, y:48, desc:"Reads (spec, seed) and emits the terrain: a deterministic grid of walkable / non-walkable tiles.", file:"terrain_generator.py"},
+  {id:"level", label:"level_generator.py", kind:"file", x:320, y:48, desc:"Uses the injected terrain generator, picks start/exit, places artifacts and enemies, and assembles a LevelDefinition.", file:"level_generator.py"},
+  {id:"leveldef", label:"LevelDefinition", kind:"data", x:470, y:48, desc:"The immutable level object: terrain, start, exit, artifacts, enemies (and patrol schedules). Everything downstream reads it.", file:null},
+  {id:"controller", label:"controller.py", kind:"file", x:620, y:48, desc:"Each turn reads the LevelDefinition via the snapshot and returns one WorldAction.", file:"controller.py"},
+  {id:"actions", label:"WorldAction", kind:"data", x:770, y:48, desc:"One accepted action per turn: move, collect, engage, wait, exit.", file:null},
+  {id:"score", label:"score", kind:"data", x:920, y:48, desc:"Accumulated from collected artifact values minus engagement penalties.", file:null},
+];
+const FLOW_EDGES=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]];
+
+function renderFlow(){
+  const W=FLOW_NODES.length*150+40, H=150;
+  let s=`<svg class="flow" viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Data flow diagram">`;
+  for(const [a,b] of FLOW_EDGES){
+    const na=FLOW_NODES[a], nb=FLOW_NODES[b];
+    s+=`<line class="edge" x1="${na.x+120}" y1="${na.y+22}" x2="${nb.x}" y2="${nb.y+22}"/>`;
+  }
+  for(let i=0;i<FLOW_NODES.length;i++){
+    const n=FLOW_NODES[i];
+    s+=`<rect class="node" id="nd-${n.id}" x="${n.x}" y="${n.y}" width="120" height="44" rx="9" onclick="flowClick('${n.id}')"/>`;
+    s+=`<text x="${n.x+60}" y="${n.y+27}" text-anchor="middle">${n.label}</text>`;
+  }
+  s+=`</svg><div class="flowdesc" id="flowdesc">Click a node to inspect that stage.</div>`;
+  document.getElementById("flow").innerHTML=s;
+}
+function flowClick(id){
+  const n=FLOW_NODES.find(x=>x.id===id); if(!n) return;
+  Array.from(document.querySelectorAll(".flow .node")).forEach(el=>el.classList.remove("sel"));
+  const nd=document.getElementById("nd-"+id); if(nd) nd.classList.add("sel");
+  document.getElementById("flowdesc").innerHTML=`<span class="f">${n.label}</span> — ${n.desc}`+(n.file?` <button class="btn" style="margin-left:8px" onclick="showFile('${n.file}')">open code</button>`:"");
+  if(n.file) showFile(n.file);
+}
+
+/* ===================== PANEL BUILDERS ===================== */
+function renderEdge(){
+  let h='<p style="margin-bottom:12px" class="muted">Review notes for the team — honest observations, each tagged with how it was confirmed.</p>';
+  for(const e of EDGE){
+    const tagClass=e.tag.includes("Python")?"tag-python":e.tag.includes("reproduced")?"tag-repro":"tag-observed";
+    h+=`<div class="edgecard"><h4>${e.title} <span class="badge-tag ${tagClass}">${e.tag}</span></h4>`;
+    h+=`<p class="muted" style="margin-bottom:4px">in <code>${e.file}</code></p>`;
+    h+=`<p>${e.text}</p></div>`;
+  }
+  document.getElementById("edge").innerHTML=h;
+}
+
+function renderRef(){
+  let h='<p class="no-print" style="margin-bottom:12px">Print this (Ctrl+P) — one sheet per file.</p>';
+  for(const f of FILES){
+    const r=QUICKREF[f];
+    h+=`<div class="refcard"><h3><span class="f">${f}</span></h3>`;
+    h+=`<div class="pitch">${r.pitch}</div>`;
+    h+=`<div class="ownerline">Owner: <b>${TEAM[f].owner}</b> · ${TEAM[f].role}</div>`;
+    h+=`<table><tr><td>Purpose</td><td>${r.purpose}</td></tr>`;
+    h+=`<tr><td>Inputs</td><td>${r.inputs}</td></tr>`;
+    h+=`<tr><td>Outputs</td><td>${r.outputs}</td></tr>`;
+    h+=`<tr><td>Invariants</td><td><ul>${r.invariants.map(i=>`<li>${i}</li>`).join("")}</ul></td></tr>`;
+    h+=`<tr><td>Dependencies</td><td>${r.dependencies}</td></tr></table></div>`;
+  }
+  document.getElementById("ref").innerHTML=h;
+}
+
+function tryRead(k){ try{ const v=localStorage.getItem(k); return v===null?null:v; }catch(e){ return null; } }
+function tryWrite(k,v){ try{ localStorage.setItem(k,v); }catch(e){ } }
+
+let explainProgress={}; let selFile=null; let selQ=0;
+function loadExplain(){ const v=tryRead("adv_explain"); if(v){ try{ explainProgress=JSON.parse(v); }catch(e){ explainProgress={}; } } }
+function saveExplain(){ tryWrite("adv_explain", JSON.stringify(explainProgress)); }
+function renderExplain(){
+  loadExplain();
+  let h='<p class="expick">Pick a file. Answer the questions a grader might ask; each reveals a model answer with the relevant lines highlighted in Read code.</p>';
+  for(const f of FILES){
+    const qs=EXPLAIN_QS[f];
+    const ans=(explainProgress[f]||{});
+    const done=qs && Object.keys(ans).length>=qs.length;
+    h+=`<button class="exfile" onclick="pickFile('${f}')"><span class="fname">${f}</span><span class="owner">${TEAM[f].owner}</span><span class="done">${done?"✓":"·"}</span></button>`;
+  }
+  h+='<div id="exquiz"></div>';
+  document.getElementById("explain").innerHTML=h;
+}
+function pickFile(f){ selFile=f; selQ=0; renderQuestion(); }
+function renderQuestion(){
+  if(!selFile) return;
+  const qs=EXPLAIN_QS[selFile]; const q=qs[selQ]; const quiz=document.getElementById("exquiz"); if(!quiz) return;
+  let h=`<div class="exq"><div class="q">(${selQ+1}/${qs.length}) ${q.q}</div><div class="exopts">`;
+  q.opts.forEach((o,i)=>{ h+=`<button class="exopt" id="op-${i}" onclick="chooseEx(${i})">${o}</button>`; });
+  h+=`</div><div id="exanswer"></div><div style="margin-top:10px">`;
+  if(selQ>0) h+=`<button class="btn" onclick="prevQ()">← prev</button> `;
+  h+=`<button class="btn" onclick="nextQ()">next →</button></div></div>`;
+  quiz.innerHTML=h;
+  const ans=explainProgress[selFile]||{};
+  if(ans[selQ]!==undefined) revealAnswer(ans[selQ]);
+}
+function chooseEx(i){
+  (explainProgress[selFile]=explainProgress[selFile]||{})[selQ]=i;
+  saveExplain(); revealAnswer(i);
+}
+function revealAnswer(chosen){
+  const q=EXPLAIN_QS[selFile][selQ];
+  q.opts.forEach((_,i)=>{
+    const b=document.getElementById("op-"+i); if(!b) return;
+    b.disabled=true;
+    if(i===q.correct) b.classList.add("right"); else if(i===chosen) b.classList.add("wrong");
+  });
+  document.getElementById("exanswer").innerHTML=
+    `<div class="exanswer"><b>Model answer:</b> ${q.answer} `+
+    `<button class="btn jump" onclick="showAnswerCode()">highlight lines ${q.lines[0]}–${q.lines[1]}</button></div>`;
+}
+function showAnswerCode(){
+  if(!selFile) return;
+  const q=EXPLAIN_QS[selFile][selQ];
+  showFile(selFile); highlightLines(selFile, q.lines[0], q.lines[1]);
+}
+function nextQ(){
+  const qs=EXPLAIN_QS[selFile];
+  if(selQ<qs.length-1){ selQ++; renderQuestion(); }
+  else message("Done: "+selFile+" — revisit in the list to review.","ok");
+}
+function prevQ(){ if(selQ>0){ selQ--; renderQuestion(); } }
+
+function setTab(name){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on", t.dataset.t===name));
+  document.querySelectorAll(".tpanel").forEach(p=>p.classList.toggle("on", p.id==="t-"+name));
+}
+function showFile(file){
+  setTab("code");
+  const secs=Array.from(document.querySelectorAll("#t-code .section"));
+  const sec=secs.find(s=>{ const f=s.querySelector("h3 .f"); return f && f.textContent.trim()===file; });
+  if(sec) sec.scrollIntoView({behavior:"smooth", block:"start"});
+}
+function highlightLines(file, lo, hi){
+  const root=document.getElementById("t-code");
+  Array.from(root.querySelectorAll(".cl")).forEach(el=>{
+    const n=+el.dataset.n || 0;
+    el.classList.toggle("hl", n>=lo && n<=hi);
+  });
+}
+
+/* ===================== TEAM / PRESENT ===================== */
+const PRESENT_HTML = `<div class="guide">
+<h4>The team & which file each member owns</h4>
 <table class="map">
-<tr><th>File</th><th>One-line pitch</th><th>Key concept</th></tr>
-<tr><td class="f">character.py</td><td>Who you are.</td><td>Read-only property over a validated definition.</td></tr>
-<tr><td class="f">artifact.py</td><td>A collectible gem.</td><td>Same wrapper pattern; value ≥ 0.</td></tr>
-<tr><td class="f">enemy.py</td><td>A blocker you can fight.</td><td>encounter_penalty = cost to engage.</td></tr>
-<tr><td class="f">terrain_generator.py</td><td>Builds the maze from a seed.</td><td>Deterministic generation; 4 shapes.</td></tr>
-<tr><td class="f">level_generator.py</td><td>Picks start/exit + places items.</td><td>Dependency injection via a contract.</td></tr>
-<tr><td class="f">controller.py</td><td>The AI player.</td><td>Dijkstra over (position, turn, defeated).</td></tr>
+<tr><th>File</th><th>Owner</th><th>Role</th></tr>
+<tr><td class="f">character.py</td><td>Sanchez</td><td>wrapper + integration/testing</td></tr>
+<tr><td class="f">artifact.py</td><td>Oepena</td><td>artifact wrapper</td></tr>
+<tr><td class="f">enemy.py</td><td>Oepena</td><td>enemy wrapper</td></tr>
+<tr><td class="f">terrain_generator.py</td><td>Gonzaga</td><td>terrain generation</td></tr>
+<tr><td class="f">level_generator.py</td><td>Rafak</td><td>level assembly</td></tr>
+<tr><td class="f">controller.py</td><td>Batoy</td><td>AI controller</td></tr>
 </table>
 
-<h4>How the AI actually thinks (the impressive part)</h4>
-<p>Every turn, the controller rebuilds a complete plan using <b>Dijkstra's algorithm</b> over a state space of <code>(row, col, turn, defeated-set)</code>. Three insights make it work:</p>
-<ul>
-<li><b>Patrols are predictable.</b> Because each accepted action advances the clock by exactly one, a patrol's location at any future turn is known in advance — so the AI plans around patrol *future* positions, not just the current one.</li>
-<li><b>Enemies are a choice.</b> Walking onto a static enemy is forbidden until you ENGAGE it from an adjacent tile (cost = 1 action + penalty). The planner weighs fighting vs. detouring automatically.</li>
-<li><b>Cost = actions + penalties.</b> That's the same number the workbench scores, so a lowest-cost plan is a highest-score plan.</li>
-</ul>
+<h4>How the pieces depend on each other</h4>
+<p>The build order is strict: <code>terrain_generator.py</code> → <code>level_generator.py</code> → entities. Everything downstream reads an immutable <code>LevelDefinition</code>. <code>character.py</code> and <code>controller.py</code> are standalone objects that only talk to the public <code>src.api</code> contracts, so they swap in independently.</p>
 
-<h4>One real bug I found (good to be able to point out)</h4>
-<p class="em">The AI-written <code>terrain_generator.py</code> crashes on a straight path when the target tile count exceeds both board dimensions: <code>rng.randrange(0, rows - target + 1)</code> gets an empty range (e.g. 6 rows, target 24 → <code>randrange(0, -17)</code>). In my run, this raised <code>ValueError: empty range in randrange</code>. The host hides this because real straight-path specs always fit one axis — but it's a latent edge case. Mentioning it shows you actually read the code.</p>
+<h4>What each file does, and why</h4>
+<h5>character.py (Sanchez)</h5>
+<p>One validated <code>agent_id</code>, exposed read-only. It is the minimal identity object; validating through <code>CharacterDefinition</code> up front means a bad id fails immediately.</p>
+<h5>artifact.py / enemy.py (Oepena)</h5>
+<p>Thin read-only wrappers over canonical definitions. They add the game meaning: <code>value</code> (points gained) and <code>encounter_penalty</code> (points lost to engage). Same pattern twice keeps the codebase symmetrical.</p>
+<h5>terrain_generator.py (Gonzaga)</h5>
+<p>Deterministic map generation: <code>(spec, seed) → Terrain</code>. Reproducibility is the contract — every bit of randomness comes from the seeded <code>random.Random(seed)</code> created inside, so fresh instances agree.</p>
+<h5>level_generator.py (Rafak)</h5>
+<p>Assembles a level: takes an injected <code>TerrainGeneratorContract</code>, picks start/exit, places artifacts/enemies, and returns an immutable <code>LevelDefinition</code>. Injection decouples it from any concrete generator.</p>
+<h5>controller.py (Batoy)</h5>
+<p>The AI brain. Each turn it picks one action by running Dijkstra over <code>(position, turn, defeated-set)</code> states. Patrols are predictable (phase = <code>(initial_phase + turn) % len(positions)</code>), so it plans around their future positions; engaging a static enemy costs <code>1 + penalty</code>; total cost equals the host's score.</p>
 
-<h4>If asked “how did you satisfy the framework?”</h4>
-<ul>
-<li>The framework defines <b>contracts</b> (<code>CharacterContract</code>, <code>TerrainGeneratorContract</code>, <code>AgentControllerContract</code>…) in <code>src/api/_contracts.py</code>. My classes satisfy them structurally — same method/property signatures.</li>
-<li>All values are <b>immutable and validated</b> through the canonical definitions (<code>CharacterDefinition</code>, <code>ArtifactDefinition</code>…) in <code>src/api/_values.py</code>, so bad data fails fast at construction.</li>
-<li>The controller is <b>stateless per run</b> and reads only the provided <code>WorldSnapshot</code> — no hidden state, no cheating.</li>
-</ul>
-
-<h4>How the page maps to the code</h4>
-<ul>
-<li>The map grid = output of <code>terrain_generator.py</code> (real captured output).</li>
-<li>Start/exit/gems/monsters = output of <code>level_generator.py</code> (real captured output).</li>
-<li>Patrols = “instructor” schedules (the student code doesn't create them — they're part of the level).</li>
-<li><b>Watch AI</b> runs a 1:1 port of <code>controller.py</code>'s algorithm.</li>
-</ul>
-`;
+<h4>Fidelity (be upfront about this)</h4>
+<p>Watch AI runs a JavaScript port of <code>controller.py</code>. That port was verified against the real Python <code>AgentController</code> on the straight-path level (seed 123): identical action sequences across the full 24-turn solve. The seven baked levels are genuine outputs of the real generators. The <b>Random</b> button uses the JS port (<code>mulberry32</code> PRNG) — it reproduces the algorithms' behavior but not Python's exact random sequences.</p>
+</div>`;
 
 /* ===================== WIRING ===================== */
 function init(){
-  // level select
   const sel=document.getElementById("levelSel");
   LEVELS.forEach((l,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=l.name; sel.appendChild(o); });
-  sel.onchange=()=>{ stopAI(); loadLevel(LEVELS[sel.value]); };
+  let last=parseInt(tryRead("adv_level"),10); if(!(last>=0&&last<LEVELS.length)) last=0;
+  sel.value=last;
+  sel.onchange=()=>{ stopAI(); loadLevel(LEVELS[sel.value]); tryWrite("adv_level", sel.value); };
   document.getElementById("btnRandom").onclick=()=>{ stopAI(); if(mode!=="play") setMode("play"); newLevel(); };
   document.getElementById("btnReset").onclick=()=>{ stopAI(); state=newState(); clearLog(); render(); message(""); };
   document.getElementById("btnStep").onclick=()=>{ if(mode==="ai") runAIStep(); else doPlay("WAIT"); };
@@ -1354,20 +1942,35 @@ function init(){
   document.getElementById("btnPlay").onclick=()=>setMode("play");
   document.getElementById("btnAI").onclick=()=>setMode("ai");
 
-  // tabs
-  const tabs=document.querySelectorAll(".tab");
-  tabs.forEach(t=>t.onclick=()=>{
-    tabs.forEach(x=>x.classList.remove("on")); t.classList.add("on");
-    document.querySelectorAll(".tpanel").forEach(p=>p.classList.remove("on"));
-    document.getElementById("t-"+t.dataset.t).classList.add("on");
-  });
+  if(tryRead("adv_theme")==="light") document.body.classList.add("theme-light");
+  document.getElementById("btnTheme").onclick=()=>{
+    document.body.classList.toggle("theme-light");
+    tryWrite("adv_theme", document.body.classList.contains("theme-light")?"light":"dark");
+    refreshThemeIcon();
+  };
+  refreshThemeIcon();
+
+  const lay=document.getElementById("layout");
+  document.getElementById("btnWide").onclick=()=>lay.classList.toggle("wide");
+
+  const scrub=document.getElementById("scrub"), out=document.getElementById("scrubVal");
+  scrub.oninput=()=>{ scrubDelta=+scrub.value; out.textContent = scrubDelta===0?"now":"+"+scrubDelta; renderGhosts(); };
+
+  document.querySelectorAll(".padbtn").forEach(b=>b.onclick=()=>doPlay(b.dataset.d||"WAIT"));
+  document.querySelectorAll(".actbtn").forEach(b=>b.onclick=()=>doPlay(b.dataset.a));
+  document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>setTab(t.dataset.t));
 
   renderCode();
-  document.getElementById("guideText").innerHTML=GUIDE;
   buildLiveCode();
   setLive([113,115],"choose_action: called every turn — read the world observation, pick one action");
-  loadLevel(LEVELS[0]);
+  setLiveState();
+  document.getElementById("presentText").innerHTML=PRESENT_HTML;
+  renderFlow(); renderEdge(); renderRef(); renderExplain();
+  loadLevel(LEVELS[sel.value]);
   renderStory();
+}
+function refreshThemeIcon(){
+  const b=document.getElementById("btnTheme"); if(b) b.textContent = document.body.classList.contains("theme-light")?"☀️":"🌙";
 }
 init();
 </script>
