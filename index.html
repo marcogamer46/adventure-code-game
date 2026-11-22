@@ -62,10 +62,11 @@
   svg.tiny{width:15px; height:15px; vertical-align:-2px; display:inline-block}
 
   /* ============ LAYOUT ============ */
-  .layout{display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:16px; align-items:start}
-  .layout.wide{grid-template-columns:1fr}
+  .layout{display:grid; grid-template-columns:1fr; gap:16px; align-items:start}
+  .layout>*{min-width:0}
+  .layout.wide{g}>-template-columns:1fr}
   .layout.wide .boardcol{display:none}
-  @media (max-width:920px){ .layout{grid-template-columns:1fr} }
+  @media (min-width:1280px){ .layout{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)} }
   .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--rad); padding:14px 16px; box-shadow:var(--shadow)}
   .card h2{font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin-bottom:10px; font-weight:650}
   .boardhead{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
