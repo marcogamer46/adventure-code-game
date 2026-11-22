@@ -292,7 +292,7 @@
   .exfile{display:flex; align-items:center; gap:10px; padding:11px 12px; border:1px solid var(--line); border-radius:11px; margin-bottom:8px; cursor:pointer; background:var(--panel2); transition:border-color .12s}
   .exfile:hover{border-color:var(--accent2)}
   .exfile .fname{font-family:ui-monospace,monospace; color:var(--accent2); font-weight:650; flex:1}
-  .exfile .owner{color:var(--muted); font-size:13px}
+  .exfile .role{color:var(--muted); font-size:13px}
   .exfile .done{color:var(--good); font-weight:700; font-size:14px}
   .exq{margin:10px 0}
   .exq .q{font-weight:650; margin-bottom:6px}
@@ -321,8 +321,8 @@
   .refcard h3{font-size:15.5px; margin-bottom:2px}
   .refcard h3 .f{color:var(--accent2); font-family:ui-monospace,monospace}
   .refcard .pitch{color:var(--muted); font-size:13.5px; margin-bottom:10px}
-  .refcard .ownerline{font-size:13px; color:var(--muted); margin-bottom:10px}
-  .refcard .ownerline b{color:var(--accent)}
+  .refcard .roleline{font-size:13px; color:var(--muted); margin-bottom:10px}
+  .refcard .roleline b{color:var(--accent)}
   .refcard table{width:100%; border-collapse:collapse; font-size:13.5px}
   .refcard td{padding:6px 8px; border-top:1px solid var(--line); vertical-align:top}
   .refcard td:first-child{font-weight:650; color:var(--muted); width:96px; white-space:nowrap}
@@ -339,7 +339,7 @@
   .cv-head{display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-family:ui-monospace,monospace; font-size:12.5px}
   .cv-file{background:var(--panel2); border:1px solid var(--accent2); color:var(--accent2); border-radius:99px; padding:2px 9px; font-weight:650}
   .cv-fn{color:var(--text); font-weight:800}
-  .cv-owner{color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--panel)); border-radius:99px; padding:2px 8px}
+  .cv-role{color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--panel)); border-radius:99px; padding:2px 8px}
   .cv-mode{color:var(--dim); text-transform:uppercase; font-size:11px; letter-spacing:.4px}
   #cvClose{margin-left:auto; font-size:14px; line-height:1; width:26px; height:26px; min-height:26px; padding:0}
   .cv-scroll{position:relative; max-height:300px; overflow:auto; background:var(--bg); border:1px solid var(--line); border-radius:10px; box-shadow:var(--inset)}
@@ -486,7 +486,7 @@
   .filechip.pulse{animation:aChipPulse .7s ease; border-color:var(--accent2); color:var(--text)}
   .file-panel{border:1px solid var(--line); border-radius:10px; background:var(--panel2); padding:10px 12px; margin-bottom:10px; font-size:13px}
   .file-panel h4{margin:0 0 6px; font-size:13px}
-  .file-panel .fp-owner{color:var(--accent); font-weight:650}
+  .file-panel .fp-role{color:var(--accent); font-weight:650}
   .file-panel .fp-purpose{color:var(--muted); margin:2px 0 8px}
   .file-panel table{width:100%; border-collapse:collapse; font-size:12.5px}
   .file-panel td{padding:4px 6px; border-top:1px solid var(--line); vertical-align:top}
@@ -734,12 +734,12 @@
         </div>
         <div class="honesty" id="actHonesty">JS port of the Python files. The page runs a JavaScript translation, not your .py at runtime.</div>
         <div class="file-chips" id="actChips" role="tablist">
-          <button class="filechip" data-file="character.py" role="tab" data-owner="Sanchez">character.py</button>
-          <button class="filechip" data-file="artifact.py" role="tab" data-owner="Oepena">artifact.py</button>
-          <button class="filechip" data-file="enemy.py" role="tab" data-owner="Oepena">enemy.py</button>
-          <button class="filechip" data-file="terrain_generator.py" role="tab" data-owner="Gonzaga">terrain_generator.py</button>
-          <button class="filechip" data-file="level_generator.py" role="tab" data-owner="Rafak">level_generator.py</button>
-          <button class="filechip" data-file="controller.py" role="tab" data-owner="Batoy">controller.py</button>
+          <button class="filechip" data-file="character.py" role="tab">character.py</button>
+          <button class="filechip" data-file="artifact.py" role="tab">artifact.py</button>
+          <button class="filechip" data-file="enemy.py" role="tab">enemy.py</button>
+          <button class="filechip" data-file="terrain_generator.py" role="tab">terrain_generator.py</button>
+          <button class="filechip" data-file="level_generator.py" role="tab">level_generator.py</button>
+          <button class="filechip" data-file="controller.py" role="tab">controller.py</button>
         </div>
         <div class="file-panel" id="actPanel" hidden></div>
       </div>
@@ -761,7 +761,7 @@
           <button class="tab" role="tab" data-t="flow">Data flow</button>
           <button class="tab" role="tab" data-t="code">Read code</button>
           <button class="tab" role="tab" data-t="ref">Reference</button>
-          <button class="tab" role="tab" data-t="present">Team</button>
+          <button class="tab" role="tab" data-t="present">Components</button>
         </div>
         <div class="subrow" data-g="test" hidden>
           <button class="tab" role="tab" data-t="explain">Explain it back</button>
@@ -780,7 +780,7 @@
           <div class="cv-head">
             <span class="cv-file" id="cvFile">controller.py</span>
             <span class="cv-fn" id="cvFn">_plan</span>
-            <span class="cv-owner" id="cvOwner">Batoy</span>
+            <span class="cv-role" id="cvRole">AI controller</span>
             <span class="cv-mode" id="cvMode">AI</span>
             <button class="btn btn-small" id="cvClose" title="Close code viewer">×</button>
           </div>
@@ -2182,12 +2182,12 @@ function renderCode(){
 /* ===================== TEAM + REFERENCE DATA ===================== */
 const FILES=["character.py","artifact.py","enemy.py","terrain_generator.py","level_generator.py","controller.py"];
 const TEAM={
-  "character.py":{owner:"Sanchez", role:"wrapper + integration/testing"},
-  "artifact.py":{owner:"Oepena", role:"artifact wrapper"},
-  "enemy.py":{owner:"Oepena", role:"enemy wrapper"},
-  "terrain_generator.py":{owner:"Gonzaga", role:"terrain generation"},
-  "level_generator.py":{owner:"Rafak", role:"level assembly"},
-  "controller.py":{owner:"Batoy", role:"AI controller"},
+  "character.py":{role:"wrapper + integration/testing", depends:"standalone · public src.api contract", dependents:"used across the game wherever identity is needed"},
+  "artifact.py":{role:"artifact wrapper", depends:"canonical artifact definition", dependents:"level generator places · game scores"},
+  "enemy.py":{role:"enemy wrapper", depends:"canonical enemy definition", dependents:"level generator places · controller plans around"},
+  "terrain_generator.py":{role:"terrain generation", depends:"none (seeded stdlib)", dependents:"level_generator.py"},
+  "level_generator.py":{role:"level assembly", depends:"terrain_generator.py", dependents:"game host / controller"},
+  "controller.py":{role:"AI controller", depends:"LevelDefinition + entity contracts", dependents:"Watch AI / play runner"},
 };
 const QUICKREF={
   "character.py":{
@@ -2383,7 +2383,7 @@ function flowClick(id){
 
 /* ===================== PANEL BUILDERS ===================== */
 function renderEdge(){
-  let h='<p style="margin-bottom:12px" class="muted">Review notes for the team — honest observations, each tagged with how it was confirmed.</p>';
+  let h='<p style="margin-bottom:12px" class="muted">Review notes — honest observations, each tagged with how it was confirmed.</p>';
   for(const e of EDGE){
     const tagClass=e.tag.includes("Python")?"tag-python":e.tag.includes("reproduced")?"tag-repro":"tag-observed";
     h+=`<div class="edgecard"><h4>${e.title} <span class="badge-tag ${tagClass}">${e.tag}</span></h4>`;
@@ -2399,7 +2399,7 @@ function renderRef(){
     const r=QUICKREF[f];
     h+=`<div class="refcard"><h3><span class="f">${f}</span></h3>`;
     h+=`<div class="pitch">${r.pitch}</div>`;
-    h+=`<div class="ownerline">Owner: <b>${TEAM[f].owner}</b> · ${TEAM[f].role}</div>`;
+    h+=`<div class="roleline">Role: <b>${TEAM[f].role}</b></div>`;
     h+=`<table><tr><td>Purpose</td><td>${r.purpose}</td></tr>`;
     h+=`<tr><td>Inputs</td><td>${r.inputs}</td></tr>`;
     h+=`<tr><td>Outputs</td><td>${r.outputs}</td></tr>`;
@@ -2422,7 +2422,7 @@ function renderExplain(){
     const qs=EXPLAIN_QS[f];
     const ans=(explainProgress[f]||{});
     const done=qs && Object.keys(ans).length>=qs.length;
-    h+=`<button class="exfile" onclick="pickFile('${f}')"><span class="fname">${f}</span><span class="owner">${TEAM[f].owner}</span><span class="done">${done?svgUse("i-check","tiny check"):"·"}</span></button>`;
+    h+=`<button class="exfile" onclick="pickFile('${f}')"><span class="fname">${f}</span><span class="role">${TEAM[f].role}</span><span class="done">${done?svgUse("i-check","tiny check"):"·"}</span></button>`;
   }
   h+='<div id="exquiz"></div>';
   document.getElementById("explain").innerHTML=h;
@@ -2500,30 +2500,30 @@ function highlightLines(file, lo, hi){
 
 /* ===================== TEAM / PRESENT ===================== */
 const PRESENT_HTML = `<div class="guide">
-<h4>The team & which file each member owns</h4>
+<h4>Components & how they fit together</h4>
 <table class="map">
-<tr><th>File</th><th>Owner</th><th>Role</th></tr>
-<tr><td class="f">character.py</td><td>Sanchez</td><td>wrapper + integration/testing</td></tr>
-<tr><td class="f">artifact.py</td><td>Oepena</td><td>artifact wrapper</td></tr>
-<tr><td class="f">enemy.py</td><td>Oepena</td><td>enemy wrapper</td></tr>
-<tr><td class="f">terrain_generator.py</td><td>Gonzaga</td><td>terrain generation</td></tr>
-<tr><td class="f">level_generator.py</td><td>Rafak</td><td>level assembly</td></tr>
-<tr><td class="f">controller.py</td><td>Batoy</td><td>AI controller</td></tr>
+<tr><th>File</th><th>Role</th><th>Depends on</th><th>Used by</th></tr>
+<tr><td class="f">character.py</td><td>wrapper + integration/testing</td><td>standalone · public src.api contract</td><td>anywhere identity is needed</td></tr>
+<tr><td class="f">artifact.py</td><td>artifact wrapper</td><td>canonical artifact definition</td><td>level generator / score</td></tr>
+<tr><td class="f">enemy.py</td><td>enemy wrapper</td><td>canonical enemy definition</td><td>level generator / controller</td></tr>
+<tr><td class="f">terrain_generator.py</td><td>terrain generation</td><td>none (seeded stdlib)</td><td>level_generator.py</td></tr>
+<tr><td class="f">level_generator.py</td><td>level assembly</td><td>terrain_generator.py</td><td>game host / controller</td></tr>
+<tr><td class="f">controller.py</td><td>AI controller</td><td>LevelDefinition + entity contracts</td><td>Watch AI / play runner</td></tr>
 </table>
 
 <h4>How the pieces depend on each other</h4>
 <p>The build order is strict: <code>terrain_generator.py</code> → <code>level_generator.py</code> → entities. Everything downstream reads an immutable <code>LevelDefinition</code>. <code>character.py</code> and <code>controller.py</code> are standalone objects that only talk to the public <code>src.api</code> contracts, so they swap in independently.</p>
 
 <h4>What each file does, and why</h4>
-<h5>character.py (Sanchez)</h5>
+<h5>character.py — wrapper + integration/testing</h5>
 <p>One validated <code>agent_id</code>, exposed read-only. It is the minimal identity object; validating through <code>CharacterDefinition</code> up front means a bad id fails immediately.</p>
-<h5>artifact.py / enemy.py (Oepena)</h5>
+<h5>artifact.py / enemy.py — wrappers over canonical definitions</h5>
 <p>Thin read-only wrappers over canonical definitions. They add the game meaning: <code>value</code> (points gained) and <code>encounter_penalty</code> (points lost to engage). Same pattern twice keeps the codebase symmetrical.</p>
-<h5>terrain_generator.py (Gonzaga)</h5>
+<h5>terrain_generator.py — terrain generation</h5>
 <p>Deterministic map generation: <code>(spec, seed) → Terrain</code>. Reproducibility is the contract — every bit of randomness comes from the seeded <code>random.Random(seed)</code> created inside, so fresh instances agree.</p>
-<h5>level_generator.py (Rafak)</h5>
+<h5>level_generator.py — level assembly</h5>
 <p>Assembles a level: takes an injected <code>TerrainGeneratorContract</code>, picks start/exit, places artifacts/enemies, and returns an immutable <code>LevelDefinition</code>. Injection decouples it from any concrete generator.</p>
-<h5>controller.py (Batoy)</h5>
+<h5>controller.py — AI controller</h5>
 <p>The AI brain. Each turn it picks one action by running Dijkstra over <code>(position, turn, defeated-set)</code> states. Patrols are predictable (phase = <code>(initial_phase + turn) % len(positions)</code>), so it plans around their future positions; engaging a static enemy costs <code>1 + penalty</code>; total cost equals the host's score.</p>
 
 <h4>Fidelity (be upfront about this)</h4>
@@ -2618,13 +2618,13 @@ function actShowCodeRange(file, lo, hi){
 function actShowPanel(file){
   const panel=document.getElementById("actPanel"); if(!panel) return;
   document.querySelectorAll(".filechip").forEach(c=>c.classList.toggle("on", c.dataset.file===file));
-  const owner=document.querySelector(`.filechip[data-file="${file}"]`).dataset.owner;
+  const role=(TEAM[file]||{}).role||"";
   const b=BLURB[file]||"";
   let rows="";
   (ACT_JS_FNS[file]||[]).forEach(fn=>{
     rows+=`<tr><td>${fn}()</td><td>${ACT_CTR[file]?.[fn]||0}×</td></tr>`; });
   panel.hidden=false;
-  panel.innerHTML=`<h4>${file} <span class="fp-owner">· ${owner}</span></h4>
+  panel.innerHTML=`<h4>${file} <span class="fp-role">· ${role}</span></h4>
     <div class="fp-purpose">${b}</div><table>${rows||"<tr><td>—</td><td>no JS port surface</td></tr>"}</table>`;
 }
 document.getElementById("actChips").addEventListener("click",e=>{
@@ -2646,7 +2646,6 @@ function actReset(){
 }
 
 /* ===================== CODE VIEWER (pass 4) ===================== */
-const TEAM_OWNER={"character.py":"Sanchez","artifact.py":"Oepena","enemy.py":"Oepena","terrain_generator.py":"Gonzaga","level_generator.py":"Rafak","controller.py":"Batoy"};
 const SRC_LINES={};
 for(const [f,id] of Object.entries(ACT_SRC)) SRC_LINES[f]=document.getElementById(id).textContent.replace(/\n$/,"").split("\n");
 const CV_ANCHORS={
@@ -2701,12 +2700,12 @@ const CV_ANCHOR_ERRORS=[];
   }
 })();
 function CL(file,key){ return (CV_LINES[file]&&key)?CV_LINES[file][key]:null; }
-const CV={ file:null, fn:null, owner:"", mode:"", events:[], ptr:-1 };
+const CV={ file:null, fn:null, role:"", mode:"", events:[], ptr:-1 };
 function cvReset(){ CV.events=[]; CV.ptr=-1; updateScrub(); }
 function cvShow(file,fn,mode){
-  CV.file=file; CV.fn=fn||""; CV.owner=TEAM_OWNER[file]||""; CV.mode=mode||"AI";
+  CV.file=file; CV.fn=fn||""; CV.role=(TEAM[file]||{}).role||""; CV.mode=mode||"AI";
   const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
-  set("cvFile",file); set("cvFn",CV.fn); set("cvOwner",CV.owner); set("cvMode",CV.mode);
+  set("cvFile",file); set("cvFn",CV.fn); set("cvRole",CV.role); set("cvMode",CV.mode);
 }
 function cvAdd(file,key,ann,snap){
   const ln=CL(file,key); if(!ln) return;
