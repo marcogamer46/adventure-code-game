@@ -86,6 +86,9 @@
   pre.code{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px 12px;
            overflow-x:auto; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.3px; line-height:1.55; color:#d7dce8}
   .codeln{color:var(--dim); user-select:none}
+  #liveCode .lc{display:block; white-space:pre; padding:0 6px; border-radius:4px; transition:background .12s}
+  #liveCode .lc.hl{background:#0e3346; color:#dff3ff; box-shadow:inset 3px 0 0 var(--accent2)}
+  #liveCode .lc.hl .codeln{color:#7fd7e8}
   .note{background:#0f2b2a; border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:7px 10px; margin:6px 0 10px;
         font-size:12.6px; color:#c8d8d4; line-height:1.55}
   .note b{color:var(--accent)}
@@ -150,6 +153,7 @@
       <div class="tabs">
         <button class="tab on" data-t="story">📖 Story &amp; Actions</button>
         <button class="tab" data-t="log">🗒 AI Log</button>
+        <button class="tab" data-t="live">🧠 Live code</button>
         <button class="tab" data-t="code">📄 Read code</button>
         <button class="tab" data-t="guide">🎤 Present</button>
       </div>
@@ -159,6 +163,10 @@
       </div>
       <div class="tpanel" id="t-log">
         <div id="log"></div>
+      </div>
+      <div class="tpanel" id="t-live">
+        <div id="liveReason" class="chip" style="margin-bottom:8px; width:100%"></div>
+        <pre class="code" id="liveCode"></pre>
       </div>
       <div class="tpanel" id="t-code"></div>
       <div class="tpanel" id="t-guide"><pre class="guide" id="guideText"></pre></div>
@@ -948,31 +956,78 @@ function setMode(m){
   if(mode==="ai"){ startAI(); } else { render(); }
 }
 
+function delayMs(){ return parseInt(document.getElementById("speed").value)||400; }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* ---- live code view ---- */
+let liveRange=null;
+function buildLiveCode(){
+  const src=document.getElementById("src-controller").textContent.replace(/\n$/,"").split("\n");
+  let h="";
+  src.forEach((line,i)=>{
+    h+=`<span class="lc" data-n="${i+1}"><span class="codeln">${String(i+1).padStart(2,"0")}</span> ${line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</span>\n`;
+  });
+  document.getElementById("liveCode").innerHTML=h;
+}
+function setLive(a,label){
+  liveRange=a;
+  if(label!==undefined) document.getElementById("liveReason").textContent="⚡ "+label;
+  const lines=Array.from(document.querySelectorAll("#liveCode .lc"));
+  lines.forEach(el=>el.classList.remove("hl"));
+  if(!a) return;
+  let first=null;
+  lines.forEach(el=>{
+    const n=+el.dataset.n;
+    if(n>=a[0]&&n<=a[1]){ el.classList.add("hl"); if(!first) first=el; }
+  });
+  if(first){ const pre=document.getElementById("liveCode"); pre.scrollTop=Math.max(0,first.offsetTop-44); }
+}
+const LIVE_PHASES={
+  exit:[116,118], collect:[119,125], planSetup:[44,53],
+  move:[66,83], engage:[84,96], wait:[97,102], returnAction:[126,130],
+};
+
+/* ---- AI runner (async, live-highlighted) ---- */
+let aiRunId=0;
 function startAI(){
   stopAI();
+  const id=++aiRunId;
   clearLog();
-  aiController={turn_count:0};
-  if(!state.over && state.r!==world.exit[0]) runAIStep();
-  if(!state.over) scheduleAI();
+  setLive([113,115],"choose_action: called every turn — read the world observation, pick one action");
+  aiLoop(id);
 }
-function stopAI(){ if(aiTimer){clearTimeout(aiTimer); aiTimer=null;} }
-function scheduleAI(){
+function stopAI(){ aiRunId++; }
+async function aiLoop(id){
+  while(aiRunId===id && mode==="ai" && !state.over){
+    await sleep(delayMs());
+    if(aiRunId!==id || mode!=="ai" || state.over) break;
+    await runAIStep();
+  }
+}
+async function runAIStep(){
   if(state.over) return;
-  const ms=parseInt(document.getElementById("speed").value);
-  aiTimer=setTimeout(()=>{ if(mode==="ai"&&!state.over){ runAIStep(); scheduleAI(); } }, ms);
-}
-function runAIStep(){
   const act=chooseAction(world,state);
-  // build a human-readable reason
-  let why="";
-  if(act.type==="EXIT") why="standing on exit → leave";
-  else if(act.type==="COLLECT") why="grab artifact on this tile (clear of inbound patrol)";
-  else { const plan=planPath(world,state); if(plan&&plan.length) why=`plan (${plan.length} steps) → first step`; else why="no plan found → wait"; }
-  const fakeLog=[];
-  applyAction(world,state,act.type,fakeLog);
-  const entry=fakeLog.length?fakeLog[0]:{a:act.type.toLowerCase(),t:act.type,why};
-  logLine({a:entry.a,t:act.type+" "+((act.target||"").replace(/-.*/,"")),why:entry.why||why});
+  const D=delayMs();
+  if(act.type==="EXIT"){
+    setLive(LIVE_PHASES.exit,"standing on the exit → EXIT");
+  } else if(act.type==="COLLECT"){
+    setLive(LIVE_PHASES.collect,"artifact on this tile and clear of inbound patrol → COLLECT");
+  } else {
+    setLive(LIVE_PHASES.planSetup,"_plan: build search state (position, turn, defeated-set)");
+    await sleep(D);
+    if(act.type.startsWith("MOVE")) setLive(LIVE_PHASES.move,"expanding a move: wall / patrol-now-next / enemy checks");
+    else if(act.type==="ENGAGE") setLive(LIVE_PHASES.engage,"staying put: ENGAGE an adjacent static enemy (1 action + penalty)");
+    else setLive(LIVE_PHASES.wait,"staying put: WAIT one turn");
+    await sleep(D);
+  }
+  const log=[];
+  applyAction(world,state,act.type,log);
+  const entry=log.length?log[0]:{a:act.type.toLowerCase(),t:act.type,why:""};
+  logLine({a:entry.a, t:(act.type+" "+(act.target||"").replace(/-.*/,"")).trim(), why:entry.why||""});
+  setLive(LIVE_PHASES.returnAction,"return the chosen action (first step of the plan)");
   render(aiPathCells());
+  if(state.win) message("The AI reached the exit! 🎉 Score "+state.score,"ok");
+  else if(state.over) message("Out of turns.","err");
 }
 function aiPathCells(){
   const set=new Set();
@@ -1003,6 +1058,11 @@ document.addEventListener("keydown",e=>{
 });
 function doPlay(act){
   if(state.over) return;
+  if(act==="EXIT") setLive(LIVE_PHASES.exit,"you: standing on the exit → EXIT");
+  else if(act==="COLLECT") setLive(LIVE_PHASES.collect,"you: collect the artifact on this tile");
+  else if(act.startsWith("MOVE")) setLive(LIVE_PHASES.move,"you: move — the same wall / patrol / enemy checks the AI uses");
+  else if(act==="ENGAGE") setLive(LIVE_PHASES.engage,"you: ENGAGE an adjacent enemy");
+  else setLive(LIVE_PHASES.wait,"you: WAIT one turn (time the patrols)");
   const log=[];
   applyAction(world,state,act,log);
   if(log.length) message(log[0].why, log[0].a==="blocked"?"err":(state.win?"ok":""));
@@ -1282,6 +1342,8 @@ function init(){
 
   renderCode();
   document.getElementById("guideText").innerHTML=GUIDE;
+  buildLiveCode();
+  setLive([113,115],"choose_action: called every turn — read the world observation, pick one action");
   loadLevel(LEVELS[0]);
   renderStory();
 }
