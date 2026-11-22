@@ -66,14 +66,18 @@
   .layout>*{min-width:0}
   .layout.wide{g}>-template-columns:1fr}
   .layout.wide .boardcol{display:none}
-  @media (min-width:1280px){ .layout{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)} }
+  @media (min-width:1280px){
+    .layout{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+    .boardcol{position:sticky; top:74px; align-self:start}
+    .rightpanel{max-height:calc(100vh - 120px); overflow-y:auto}
+  }
   .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--rad); padding:14px 16px; box-shadow:var(--shadow)}
   .card h2{font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin-bottom:10px; font-weight:650}
   .boardhead{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
   .boardhead h2{margin-bottom:0}
 
   /* ============ BOARD ============ */
-  #boardHost{position:relative; display:block; overflow-x:auto; -webkit-overflow-scrolling:touch}
+  #boardHost{position:relative; display:block; overflow:hidden}
   #board{display:grid; gap:2px; padding:8px; background:var(--panel2); border-radius:10px; border:1px solid var(--line); margin:0 auto; min-width:0}
   .cell{width:100%; aspect-ratio:1/1; border-radius:4px; display:flex; align-items:center; justify-content:center; position:relative; line-height:1; min-width:0}
   .cell.wall{background:var(--wall); border:1px solid color-mix(in srgb, var(--text) 14%, transparent)}
@@ -146,6 +150,7 @@
   .gbtn:hover{color:var(--text)}
   .gbtn.on{color:var(--accent); border-bottom-color:var(--accent)}
   .subrow{display:flex; gap:5px; margin-bottom:12px; overflow-x:auto; scrollbar-width:thin; -webkit-overflow-scrolling:touch; padding-bottom:2px}
+  .subrow[hidden]{display:none}
   .subrow .tab{flex:0 0 auto}
   .tab{background:transparent; color:var(--muted); border:1px solid transparent; border-radius:8px; padding:6px 11px; font-size:13.5px; cursor:pointer; min-height:32px; white-space:nowrap}
   .tab.on{background:var(--panel2); color:var(--text); border-color:var(--line); font-weight:600}
@@ -192,6 +197,11 @@
 
   .ctlgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0}
   @media (max-width:640px){ .ctlgrid{grid-template-columns:1fr} }
+  .controls-h{margin:12px 0 2px; color:var(--accent); font-size:13px; text-transform:uppercase; letter-spacing:.4px}
+  .keysgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:7px; margin:8px 0 4px}
+  .keychip{display:flex; gap:8px; align-items:center; border:1px solid var(--line); background:var(--panel2); border-radius:9px; padding:7px 9px; font-size:13.5px; line-height:1.3}
+  .keychip kbd{font-family:ui-monospace,monospace; font-weight:700; background:var(--bg); border:1px solid var(--line); border-bottom-width:2px; border-radius:6px; padding:2px 6px; font-size:12px; color:var(--accent2); white-space:nowrap}
+  .keychip span{color:var(--text)}
   details.howto summary{cursor:pointer; color:var(--accent2); font-size:14px; font-weight:600; padding:6px 0; user-select:none}
   details.howto[open] summary{margin-bottom:6px}
   .guide{margin:0; font-size:14.5px; color:var(--text); line-height:1.65}
@@ -1180,10 +1190,10 @@ function renderDeadline(){
 }
 
 function render(pathCells){
-  boardEl.style.gridTemplateColumns=`repeat(${world.cols}, minmax(24px, 1fr))`;
+  boardEl.style.gridTemplateColumns=`repeat(${world.cols}, minmax(0,1fr))`;
   let cellPx=32;
   if(boardEl.clientWidth>0){ const avail=boardEl.clientWidth-16; cellPx=(avail-(world.cols-1)*2)/world.cols; }
-  boardEl.style.setProperty("--cellsize", Math.max(24,Math.round(cellPx))+"px");
+  boardEl.style.setProperty("--cellsize", Math.max(8,Math.round(cellPx))+"px");
   boardEl.innerHTML="";
   const patOcc=new Set();
   for(const p of world.patrols){ const q=patrolPos(p,state.turn); patOcc.add(key(q[0],q[1])); }
@@ -1214,23 +1224,20 @@ function render(pathCells){
 function message(txt,cls){ msgEl.textContent=txt; msgEl.className=cls||""; }
 
 /* ===================== STORY PANEL (play instructions + world each) ===================== */
-const ACTION_HELP = [
-  ["Move","Arrow keys / WASD — N/S/E/W. One turn per move. You can't walk through walls, a patrol (now or next turn), or an undefeated enemy."],
-  ["Collect (C)","When standing on a "+iconTiny("artifact")+". Adds its value to your score. Costs one turn."],
-  ["Engage (E)","When next to a "+iconTiny("enemy")+" (Manhattan distance 1). Defeats it, subtracts its penalty from your score. Costs one turn. You must do this before you can walk over that enemy."],
-  ["Wait (Space)","Do nothing for one turn — used to time patrols. (The AI uses this a lot.)"],
-  ["Exit (X)","Only works when you're standing on the "+iconTiny("exit")+". That's how you win."],
-];
 function renderStory(){
   const el=document.getElementById("story");
-  let h=`<div class="guide"><p>The <b>character</b> (${"character.py"}) is you, the player. The grid is the <b>terrain</b> (${"terrain_generator.py"}). Gems and monsters are placed by the <b>level generator</b> (${"level_generator.py"}). The moving ghosts are <b>patrols</b> — the AI in ${"controller.py"} exists mainly to dodge and time those.</p>`;
-  h+=`<details class="howto" open><summary>How to play</summary>`;
-  h+=`<p>Collect as much score as you can and reach the exit before turn ${world.maxTurns}. Engaging enemies costs points, so weigh it against going around. Patrols are never killable — you can only time them. Use <b>Watch AI</b> to see the Dijkstra planner solve the same board step by step.</p>`;
-  h+=`<div class="ctlgrid">`;
-  for(const [t,d] of ACTION_HELP) h+=`<div><b>${t}</b><br><span class="muted">${d}</span></div>`;
-  h+=`</div></details>`;
-  h+=`<details class="howto"><summary>Fidelity note</summary><p class="muted">The seven baked levels are genuine output of the real Python generators. The <b>Random</b> button uses a JavaScript port (a <code>mulberry32</code> PRNG) — it reproduces the algorithms' shapes but not Python's exact random sequences. Watch AI is a port of controller.py verified against the real code on the straight-path level.</p></details></div>`;
-  el.innerHTML=h;
+  const intro=`<p>The <b>character</b> (character.py) moves through <b>terrain</b> (terrain_generator.py) built by the <b>level generator</b> (level_generator.py). Grab gems, dodge patrols, engage monsters, and reach the exit before turn ${world.maxTurns}.</p>`;
+  const keys=`<div class="keysgrid">
+    <div class="keychip"><kbd>← ↑ ↓ →</kbd><span>move (WASD too)</span></div>
+    <div class="keychip"><kbd>C</kbd><span>collect the gem you're on</span></div>
+    <div class="keychip"><kbd>E</kbd><span>engage an adjacent enemy</span></div>
+    <div class="keychip"><kbd>Space</kbd><span>wait — time the patrols</span></div>
+    <div class="keychip"><kbd>X</kbd><span>exit (only on the exit tile)</span></div>
+  </div>`;
+  const howto=`<details class="howto" open><summary>How to play</summary>
+    <p>Reach the exit before turn ${world.maxTurns}. Each move or action costs one turn. Walls block movement; a patrol blocks a tile now or next turn. Collect artifacts (+score) by standing on them and pressing <b>C</b>. Enemies must be engaged (<b>E</b>) when adjacent — engaging costs points, so going around may be cheaper. Exit (<b>X</b>) wins.</p></details>`;
+  const fid=`<details class="howto"><summary>Fidelity note</summary><p class="muted">The seven baked levels are genuine output of the real Python generators. The <b>Random</b> button uses a JavaScript port (a <code>mulberry32</code> PRNG) — it reproduces the algorithms' shapes but not Python's exact random sequences. Watch AI is a port of controller.py verified against the real code on the straight-path level.</p></details>`;
+  el.innerHTML=`<div class="guide">${intro}<h5 class="controls-h">Controls</h5>${keys}${howto}${fid}</div>`;
 }
 
 /* ===================== AI LOG ===================== */
@@ -1932,13 +1939,19 @@ function nextQ(){
 function prevQ(){ if(selQ>0){ selQ--; renderQuestion(); } }
 
 const TAB_GROUP={story:"play", log:"play", live:"play", flow:"learn", code:"learn", ref:"learn", present:"learn", explain:"test", edge:"test"};
-function setGroup(g){
+function groupSelect(g){
   document.querySelectorAll(".gbtn").forEach(b=>b.classList.toggle("on", b.dataset.g===g));
   document.querySelectorAll(".subrow").forEach(r=>{ r.hidden = r.dataset.g!==g; });
 }
+function setGroup(g){
+  groupSelect(g);
+  const row=document.querySelector('.subrow[data-g="'+g+'"]');
+  const first = row && row.querySelector(".tab");
+  if(first) setTab(first.dataset.t);
+}
 function setTab(name){
   const g=TAB_GROUP[name];
-  if(g) setGroup(g);
+  if(g) groupSelect(g);
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on", t.dataset.t===name));
   document.querySelectorAll(".tpanel").forEach(p=>p.classList.toggle("on", p.id==="t-"+name));
 }
