@@ -1,0 +1,237 @@
+1
+00:00:00,930 --> 00:00:04,330
+A playable tour of your six Python
+components.
+
+2
+00:00:04,330 --> 00:00:07,730
+Story & actions explains every move as it
+happens.
+
+3
+00:00:07,730 --> 00:00:11,130
+The AI log records each step and why.
+
+4
+00:00:11,130 --> 00:00:14,530
+Live code follows the running Python line
+by line.
+
+5
+00:00:14,530 --> 00:00:17,930
+Learn: Data flow, code, reference,
+components.
+
+6
+00:00:17,930 --> 00:00:21,330
+Data flow shows how seed becomes a level.
+
+7
+00:00:21,330 --> 00:00:24,730
+Components lists roles and what depends on
+each.
+
+8
+00:00:24,730 --> 00:00:28,130
+Test yourself: Explain it back and Edge
+cases.
+
+9
+00:00:28,130 --> 00:00:31,530
+Enough touring — let’s play.
+
+10
+00:00:31,530 --> 00:00:34,930
+Move with the arrow keys — or WASD.
+
+11
+00:00:34,930 --> 00:00:38,330
+Walls and obstacles gently stop you.
+
+12
+00:00:38,330 --> 00:00:41,730
+Step onto a gem — the score ticks up.
+
+13
+00:00:41,730 --> 00:00:45,130
+Get next to an enemy, press E to engage.
+
+14
+00:00:45,130 --> 00:00:48,530
+It costs a turn plus the bounty penalty.
+
+15
+00:00:48,530 --> 00:00:51,930
+That’s the core loop — try any level!
+
+16
+00:00:51,930 --> 00:00:55,330
+On phones, a D-pad appears under the
+board.
+
+17
+00:00:55,330 --> 00:00:58,730
+Tap the arrows to move around the grid.
+
+18
+00:00:58,730 --> 00:01:02,130
+Everything else works exactly the same.
+
+19
+00:01:02,130 --> 00:01:05,530
+Slow the speed to 0.7s to follow along.
+
+20
+00:01:05,530 --> 00:01:08,930
+Watch AI lets the planner run the level
+for you.
+
+21
+00:01:08,930 --> 00:01:12,330
+Watch the frontier of states it explores.
+
+22
+00:01:12,330 --> 00:01:15,730
+Pause to freeze and inspect a state.
+
+23
+00:01:15,730 --> 00:01:19,130
+Step advances exactly one AI turn.
+
+24
+00:01:19,130 --> 00:01:22,781
+Resume picks right back up.
+
+25
+00:01:22,781 --> 00:01:26,431
+Resume picks right back up.
+
+26
+00:01:26,431 --> 00:01:30,082
+Resume picks right back up.
+
+27
+00:01:30,082 --> 00:01:33,732
+Resume picks right back up.
+
+28
+00:01:33,732 --> 00:01:37,132
+At the exit, the summary card appears.
+
+29
+00:01:37,132 --> 00:01:41,931
+Close it anytime — the board stays live.
+
+30
+00:01:41,931 --> 00:01:45,331
+Live code highlights the currently
+executing line.
+
+31
+00:01:45,331 --> 00:01:48,731
+Step line walks the cursor through the
+trace.
+
+32
+00:01:48,731 --> 00:01:52,131
+Run-to-next-function jumps to the next
+call.
+
+33
+00:01:52,131 --> 00:01:55,531
+Scrub to replay any earlier moment.
+
+34
+00:01:55,531 --> 00:01:58,931
+Variables panel tracks values as they
+change.
+
+35
+00:01:58,931 --> 00:02:02,331
+That’s how you read the code visually.
+
+36
+00:02:02,331 --> 00:02:05,731
+Data flow shows how a seed becomes a
+level.
+
+37
+00:02:05,731 --> 00:02:09,346
+Click any stage to see what it produces.
+
+38
+00:02:09,346 --> 00:02:12,746
+Read code opens the annotated full source.
+
+39
+00:02:12,746 --> 00:02:16,146
+Reference gives printable per-file sheets.
+
+40
+00:02:16,146 --> 00:02:19,546
+Components lays out roles and
+dependencies.
+
+41
+00:02:19,546 --> 00:02:22,946
+Explain it back quizzes you on each file.
+
+42
+00:02:22,946 --> 00:02:26,346
+Pick a file and answer a question.
+
+43
+00:02:26,346 --> 00:02:29,746
+Answer, then compare to the model answer.
+
+44
+00:02:29,746 --> 00:02:33,146
+Highlight jumps to the exact lines in the
+source.
+
+45
+00:02:33,146 --> 00:02:36,546
+Edge cases lists known quirks — tagged
+honestly.
+
+46
+00:02:36,546 --> 00:02:39,946
+Customize the look to your taste.
+
+47
+00:02:39,946 --> 00:02:43,346
+Toggle light and dark theme.
+
+48
+00:02:43,346 --> 00:02:46,746
+Fit scales the board to your window.
+
+49
+00:02:46,746 --> 00:02:50,146
+Random generates a level from a fresh
+seed.
+
+50
+00:02:50,146 --> 00:02:53,546
+Reset clears the run and starts clean.
+
+51
+00:02:53,546 --> 00:02:56,946
+Or pick one of seven baked levels.
+
+52
+00:02:56,946 --> 00:03:00,346
+Then Watch AI solves it.
+
+53
+00:03:00,346 --> 00:03:03,746
+That’s the whole explainer.
+
+54
+00:03:03,746 --> 00:03:07,146
+Play, watch, read, quiz, present — enjoy.
+
+55
+00:03:07,146 --> 00:03:10,546
+Thanks for watching!
+

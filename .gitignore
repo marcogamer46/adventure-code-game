@@ -1,0 +1,5 @@
+# generated tutorial video + intermediates (never commit these)
+demo-video/*.mp4
+demo-video/scenes/
+demo-video/concat.txt
+demo-video/_qa_frames.py
